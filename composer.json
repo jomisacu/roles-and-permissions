@@ -28,7 +28,8 @@
     "ext-pdo": "*"
   },
   "suggest": {
-    "ext-pdo_mysql": "Required to use the MySQL repository implementations"
+    "ext-pdo_mysql": "Required to use the MySQL repository implementations",
+    "ext-pdo_pgsql": "Required to use the PostgreSQL repository implementations"
   },
   "require-dev": {
     "phpunit/phpunit": "^10.5 || ^11.5 || ^12.1"

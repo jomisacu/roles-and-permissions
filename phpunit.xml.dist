@@ -8,6 +8,12 @@
         <env name="DB_TEST_NAME" value="roles_and_permissions_test"/>
         <env name="DB_TEST_USER" value="root"/>
         <env name="DB_TEST_PASSWORD" value=""/>
+        <env name="PG_TEST_HOST" value="127.0.0.1"/>
+        <env name="PG_TEST_PORT" value="5433"/>
+        <env name="PG_TEST_NAME" value="roles_and_permissions_pg_test"/>
+        <env name="PG_TEST_USER" value="postgres"/>
+        <env name="PG_TEST_PASSWORD" value=""/>
+        <env name="PG_TEST_ADMIN_DB" value="postgres"/>
     </php>
     <testsuites>
         <testsuite name="roles-and-permissions">

@@ -1,0 +1,17 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$autoloadPath = $_composer_autoload_path ?? dirname(__DIR__) . '/vendor/autoload.php';
+
+if (!file_exists($autoloadPath)) {
+    fwrite(STDERR, "Unable to locate Composer autoload file.\n");
+    exit(1);
+}
+
+require $autoloadPath;
+
+$command = new \Jomisacu\RolesAndPermissions\GenerateMigrationsCommand();
+
+exit($command->run($argv, getcwd() ?: dirname(__DIR__)));

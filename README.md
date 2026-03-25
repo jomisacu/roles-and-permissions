@@ -33,6 +33,32 @@ For production upgrades, use the versioned files in `database/migrations/mysql/`
 
 For an existing installation, apply only the pending files in order. Before running `0002_harden_relation_constraints.sql`, make sure your relation tables do not contain duplicate rows that would violate the new unique indexes.
 
+## Migration generator
+
+The package ships a utility command to scaffold migrations for plain PHP, Laravel, or Symfony projects.
+
+```bash
+vendor/bin/jomisacu-roles-and-permissions generate-migrations --target-framework=php --target-platform=mysql
+```
+
+You can also call the namespaced alias if you prefer:
+
+```bash
+vendor/bin/jomisacu-roles-and-permissions jomisacu:roles-and-permissions:generate-migrations --target-framework=symfony --target-platform=mysql --migrations-path=./migrations
+```
+
+Available options:
+
+- `--table-prefix=_jomisacu_`
+- `--target-framework=php|laravel|symfony`
+- `--migrations-path=./some-path` required for `laravel` and `symfony`
+- `--target-platform=mysql|postgres`
+
+Notes:
+
+- Plain PHP targets default to `./database/migrations/<platform>` when `migrations-path` is omitted.
+- The generator can emit MySQL and PostgreSQL migration templates, but the repository implementations bundled in the package are still MySQL-specific.
+
 ## Usage
 
 ```php

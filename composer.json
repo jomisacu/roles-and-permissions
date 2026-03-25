@@ -3,6 +3,9 @@
   "description": "A simple way to handle roles and permissions",
   "type": "library",
   "license": "MIT",
+  "bin": [
+    "bin/jomisacu-roles-and-permissions"
+  ],
   "autoload": {
     "psr-4": {
       "Jomisacu\\RolesAndPermissions\\": "src/"

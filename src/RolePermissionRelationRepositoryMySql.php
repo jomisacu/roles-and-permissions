@@ -11,9 +11,13 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
 {
     use HandlesMySqlRepositoryExceptions;
 
+    private readonly MySqlTableNames $tableNames;
+
     public function __construct(
         private readonly PDO $pdo,
+        ?MySqlTableNames $tableNames = null,
     ) {
+        $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
 
     /**
@@ -21,12 +25,13 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
      */
     public function findByContextAndRole(string $contextId, string $roleId): array
     {
-        return $this->runRepositoryOperation('find role permissions', '_jomisacu_role_permission_relations', function () use ($contextId, $roleId): array {
-            $stmt = $this->pdo->prepare('
-                SELECT * FROM _jomisacu_role_permission_relations 
-                WHERE context_id = :context_id 
-                AND role_id = :role_id
-            ');
+        $tableName = $this->tableNames->rolePermissionRelations();
+
+        return $this->runRepositoryOperation('find role permissions', $tableName, function () use ($contextId, $roleId, $tableName): array {
+            $stmt = $this->pdo->prepare(sprintf(
+                'SELECT * FROM %s WHERE context_id = :context_id AND role_id = :role_id',
+                $tableName,
+            ));
 
             $stmt->execute([':context_id' => $contextId, ':role_id' => $roleId]);
 
@@ -60,13 +65,15 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
             return [];
         }
 
-        return $this->runRepositoryOperation('find role permissions by role list', '_jomisacu_role_permission_relations', function () use ($contextId, $roleIds): array {
+        $tableName = $this->tableNames->rolePermissionRelations();
+
+        return $this->runRepositoryOperation('find role permissions by role list', $tableName, function () use ($contextId, $roleIds, $tableName): array {
             $placeholders = str_repeat('?,', count($roleIds) - 1) . '?';
-            $stmt = $this->pdo->prepare("
-                SELECT * FROM _jomisacu_role_permission_relations 
-                WHERE context_id = ? 
-                AND role_id IN ($placeholders)
-            ");
+            $stmt = $this->pdo->prepare(sprintf(
+                'SELECT * FROM %s WHERE context_id = ? AND role_id IN (%s)',
+                $tableName,
+                $placeholders,
+            ));
 
             $stmt->execute([$contextId, ...$roleIds]);
 
@@ -76,11 +83,13 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
 
     public function create(RolePermissionRelation $rolePermissionRelation): void
     {
-        $this->runRepositoryOperation('create role permission relation', '_jomisacu_role_permission_relations', function () use ($rolePermissionRelation): void {
-            $statement = $this->pdo->prepare('
-                INSERT INTO _jomisacu_role_permission_relations (context_id, role_id, permission_id, resource, negated, created_by_user_id, created_at)
-                VALUES (:contextId, :roleId, :permissionId, :resource, :negated, :createdByUserId, :createdAt)
-            ');
+        $tableName = $this->tableNames->rolePermissionRelations();
+
+        $this->runRepositoryOperation('create role permission relation', $tableName, function () use ($rolePermissionRelation, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf(
+                'INSERT INTO %s (context_id, role_id, permission_id, resource, negated, created_by_user_id, created_at) VALUES (:contextId, :roleId, :permissionId, :resource, :negated, :createdByUserId, :createdAt)',
+                $tableName,
+            ));
             $statement->execute([
                 'contextId' => $rolePermissionRelation->contextId,
                 'roleId' => $rolePermissionRelation->roleId,
@@ -95,15 +104,13 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
 
     public function delete(RolePermissionRelation $rolePermissionRelation): void
     {
-        $this->runRepositoryOperation('delete role permission relation', '_jomisacu_role_permission_relations', function () use ($rolePermissionRelation): void {
-            $statement = $this->pdo->prepare('
-                DELETE FROM _jomisacu_role_permission_relations
-                WHERE context_id = :contextId
-                  AND role_id = :roleId
-                  AND permission_id = :permissionId
-                  AND resource = :resource
-                  AND negated = :negated
-            ');
+        $tableName = $this->tableNames->rolePermissionRelations();
+
+        $this->runRepositoryOperation('delete role permission relation', $tableName, function () use ($rolePermissionRelation, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf(
+                'DELETE FROM %s WHERE context_id = :contextId AND role_id = :roleId AND permission_id = :permissionId AND resource = :resource AND negated = :negated',
+                $tableName,
+            ));
             $statement->execute([
                 'contextId' => $rolePermissionRelation->contextId,
                 'roleId' => $rolePermissionRelation->roleId,

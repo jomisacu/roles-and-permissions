@@ -68,6 +68,7 @@ declare(strict_types=1);
 
 use Jomisacu\RolesAndPermissions\ActorPermissionRelationRepositoryMySql;
 use Jomisacu\RolesAndPermissions\ActorRoleRelationRepositoryMySql;
+use Jomisacu\RolesAndPermissions\MySqlTableNames;
 use Jomisacu\RolesAndPermissions\PermissionChecker;
 use Jomisacu\RolesAndPermissions\ResourceMatcher;
 use Jomisacu\RolesAndPermissions\RolePermissionRelationRepositoryMySql;
@@ -75,11 +76,13 @@ use Jomisacu\RolesAndPermissions\RolePermissionRelationRepositoryMySql;
 $pdo = new PDO('mysql:host=127.0.0.1;port=3306;dbname=your_database', 'user', 'password');
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+$tableNames = MySqlTableNames::fromPrefix('_jomisacu_');
+
 $checker = new PermissionChecker(
-    new ActorRoleRelationRepositoryMySql($pdo),
+    new ActorRoleRelationRepositoryMySql($pdo, $tableNames),
     new ResourceMatcher(),
-    new ActorPermissionRelationRepositoryMySql($pdo),
-    new RolePermissionRelationRepositoryMySql($pdo),
+    new ActorPermissionRelationRepositoryMySql($pdo, $tableNames),
+    new RolePermissionRelationRepositoryMySql($pdo, $tableNames),
 );
 
 $canPublish = $checker->can(
@@ -95,6 +98,7 @@ $canPublish = $checker->can(
 - `PermissionChecker` is stateless across calls, so it can be safely reused as a service without keeping stale authorization data in memory.
 - The package ships a consolidated schema in `database/mysql.sql` and versioned upgrade scripts in `database/migrations/mysql/`.
 - The MySQL repositories raise package exceptions instead of leaking raw PDO errors: `RepositoryException`, `UniqueConstraintViolationException`, and `ForeignKeyConstraintViolationException`.
+- If you generate migrations with a custom table prefix, pass the same prefix to the repositories with `MySqlTableNames::fromPrefix(...)`.
 
 ## Tests
 

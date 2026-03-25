@@ -8,9 +8,13 @@ final class ActorPermissionRelationRepositoryMySql implements ActorPermissionRel
 {
     use HandlesMySqlRepositoryExceptions;
 
+    private readonly MySqlTableNames $tableNames;
+
     public function __construct(
         private readonly \PDO $pdo,
+        ?MySqlTableNames $tableNames = null,
     ) {
+        $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
 
     /**
@@ -18,12 +22,13 @@ final class ActorPermissionRelationRepositoryMySql implements ActorPermissionRel
      */
     public function findByContextAndActor(string $contextId, string $actorId): array
     {
-        return $this->runRepositoryOperation('find actor permissions', '_jomisacu_actor_permission_relations', function () use ($contextId, $actorId): array {
-            $stmt = $this->pdo->prepare('
-                SELECT context_id, actor_id, permission_id, resource, negated, created_by_user_id, created_at, updated_by_user_id, updated_at
-                FROM _jomisacu_actor_permission_relations
-                WHERE context_id = :contextId AND actor_id = :actorId
-            ');
+        $tableName = $this->tableNames->actorPermissionRelations();
+
+        return $this->runRepositoryOperation('find actor permissions', $tableName, function () use ($contextId, $actorId, $tableName): array {
+            $stmt = $this->pdo->prepare(sprintf(
+                'SELECT context_id, actor_id, permission_id, resource, negated, created_by_user_id, created_at, updated_by_user_id, updated_at FROM %s WHERE context_id = :contextId AND actor_id = :actorId',
+                $tableName,
+            ));
 
             $stmt->execute([
                 ':contextId' => $contextId,
@@ -49,11 +54,13 @@ final class ActorPermissionRelationRepositoryMySql implements ActorPermissionRel
 
     public function create(ActorPermissionRelation $actorPermissionRelation): void
     {
-        $this->runRepositoryOperation('create actor permission relation', '_jomisacu_actor_permission_relations', function () use ($actorPermissionRelation): void {
-            $statement = $this->pdo->prepare('
-                INSERT INTO _jomisacu_actor_permission_relations (context_id, actor_id, permission_id, resource, negated, created_by_user_id, created_at)
-                VALUES (:contextId, :actorId, :permissionId, :resource, :negated, :createdByUserId, :createdAt)
-            ');
+        $tableName = $this->tableNames->actorPermissionRelations();
+
+        $this->runRepositoryOperation('create actor permission relation', $tableName, function () use ($actorPermissionRelation, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf(
+                'INSERT INTO %s (context_id, actor_id, permission_id, resource, negated, created_by_user_id, created_at) VALUES (:contextId, :actorId, :permissionId, :resource, :negated, :createdByUserId, :createdAt)',
+                $tableName,
+            ));
             $statement->execute([
                 'contextId' => $actorPermissionRelation->contextId,
                 'actorId' => $actorPermissionRelation->actorId,
@@ -68,15 +75,13 @@ final class ActorPermissionRelationRepositoryMySql implements ActorPermissionRel
 
     public function delete(ActorPermissionRelation $actorPermissionRelation): void
     {
-        $this->runRepositoryOperation('delete actor permission relation', '_jomisacu_actor_permission_relations', function () use ($actorPermissionRelation): void {
-            $statement = $this->pdo->prepare('
-                DELETE FROM _jomisacu_actor_permission_relations
-                WHERE context_id = :contextId
-                  AND actor_id = :actorId
-                  AND permission_id = :permissionId
-                  AND resource = :resource
-                  AND negated = :negated
-            ');
+        $tableName = $this->tableNames->actorPermissionRelations();
+
+        $this->runRepositoryOperation('delete actor permission relation', $tableName, function () use ($actorPermissionRelation, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf(
+                'DELETE FROM %s WHERE context_id = :contextId AND actor_id = :actorId AND permission_id = :permissionId AND resource = :resource AND negated = :negated',
+                $tableName,
+            ));
             $statement->execute([
                 'contextId' => $actorPermissionRelation->contextId,
                 'actorId' => $actorPermissionRelation->actorId,

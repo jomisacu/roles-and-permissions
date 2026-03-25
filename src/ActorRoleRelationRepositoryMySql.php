@@ -10,9 +10,13 @@ final class ActorRoleRelationRepositoryMySql implements ActorRoleRelationReposit
 {
     use HandlesMySqlRepositoryExceptions;
 
+    private readonly MySqlTableNames $tableNames;
+
     public function __construct(
         private readonly \PDO $pdo,
+        ?MySqlTableNames $tableNames = null,
     ) {
+        $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
 
     /**
@@ -20,12 +24,13 @@ final class ActorRoleRelationRepositoryMySql implements ActorRoleRelationReposit
      */
     public function findActorRoles(string $contextId, string $actorId): array
     {
-        return $this->runRepositoryOperation('find actor roles', '_jomisacu_actor_role_relations', function () use ($contextId, $actorId): array {
-            $stmt = $this->pdo->prepare('
-                SELECT *
-                FROM _jomisacu_actor_role_relations
-                WHERE context_id = :contextId AND actor_id = :actorId
-            ');
+        $tableName = $this->tableNames->actorRoleRelations();
+
+        return $this->runRepositoryOperation('find actor roles', $tableName, function () use ($contextId, $actorId, $tableName): array {
+            $stmt = $this->pdo->prepare(sprintf(
+                'SELECT * FROM %s WHERE context_id = :contextId AND actor_id = :actorId',
+                $tableName,
+            ));
 
             $stmt->execute([
                 ':contextId' => $contextId,
@@ -49,11 +54,13 @@ final class ActorRoleRelationRepositoryMySql implements ActorRoleRelationReposit
 
     public function create(ActorRoleRelation $actorRoleRelation): void
     {
-        $this->runRepositoryOperation('create actor role relation', '_jomisacu_actor_role_relations', function () use ($actorRoleRelation): void {
-            $statement = $this->pdo->prepare('
-                INSERT INTO _jomisacu_actor_role_relations (context_id, actor_id, role_id, created_by_user_id, created_at)
-                VALUES (:contextId, :actorId, :roleId, :createdByUserId, :createdAt)
-            ');
+        $tableName = $this->tableNames->actorRoleRelations();
+
+        $this->runRepositoryOperation('create actor role relation', $tableName, function () use ($actorRoleRelation, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf(
+                'INSERT INTO %s (context_id, actor_id, role_id, created_by_user_id, created_at) VALUES (:contextId, :actorId, :roleId, :createdByUserId, :createdAt)',
+                $tableName,
+            ));
             $statement->execute([
                 'contextId' => $actorRoleRelation->contextId,
                 'actorId' => $actorRoleRelation->actorId,
@@ -66,8 +73,13 @@ final class ActorRoleRelationRepositoryMySql implements ActorRoleRelationReposit
 
     public function delete(ActorRoleRelation $actorRoleRelation): void
     {
-        $this->runRepositoryOperation('delete actor role relation', '_jomisacu_actor_role_relations', function () use ($actorRoleRelation): void {
-            $statement = $this->pdo->prepare('DELETE FROM _jomisacu_actor_role_relations WHERE context_id = :contextId AND actor_id = :actorId AND role_id = :roleId');
+        $tableName = $this->tableNames->actorRoleRelations();
+
+        $this->runRepositoryOperation('delete actor role relation', $tableName, function () use ($actorRoleRelation, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf(
+                'DELETE FROM %s WHERE context_id = :contextId AND actor_id = :actorId AND role_id = :roleId',
+                $tableName,
+            ));
             $statement->execute([
                 'contextId' => $actorRoleRelation->contextId,
                 'actorId' => $actorRoleRelation->actorId,

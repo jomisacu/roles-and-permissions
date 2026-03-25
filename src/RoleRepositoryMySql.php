@@ -11,8 +11,11 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
 {
     use HandlesMySqlRepositoryExceptions;
 
-    public function __construct(private readonly PDO $pdo)
+    private readonly MySqlTableNames $tableNames;
+
+    public function __construct(private readonly PDO $pdo, ?MySqlTableNames $tableNames = null)
     {
+        $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
 
     /**
@@ -20,8 +23,10 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
      */
     public function findById(string $id): ?Role
     {
-        return $this->runRepositoryOperation('find role by id', '_jomisacu_roles', function () use ($id): ?Role {
-            $statement = $this->pdo->prepare('SELECT * FROM _jomisacu_roles WHERE id = :id');
+        $tableName = $this->tableNames->roles();
+
+        return $this->runRepositoryOperation('find role by id', $tableName, function () use ($id, $tableName): ?Role {
+            $statement = $this->pdo->prepare(sprintf('SELECT * FROM %s WHERE id = :id', $tableName));
             $statement->bindValue(':id', $id);
             $statement->execute();
 
@@ -36,8 +41,10 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
 
     public function findByContextId(string $contextId): array
     {
-        return $this->runRepositoryOperation('find roles by context', '_jomisacu_roles', function () use ($contextId): array {
-            $statement = $this->pdo->prepare('SELECT * FROM _jomisacu_roles WHERE context_id = :context_id');
+        $tableName = $this->tableNames->roles();
+
+        return $this->runRepositoryOperation('find roles by context', $tableName, function () use ($contextId, $tableName): array {
+            $statement = $this->pdo->prepare(sprintf('SELECT * FROM %s WHERE context_id = :context_id', $tableName));
             $statement->bindValue(':context_id', $contextId);
             $statement->execute();
 
@@ -51,8 +58,10 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
 
     public function create(Role $role): void
     {
-        $this->runRepositoryOperation('create role', '_jomisacu_roles', function () use ($role): void {
-            $statement = $this->pdo->prepare('INSERT INTO _jomisacu_roles (id, context_id, name, description) VALUES (:id, :context_id, :name, :description)');
+        $tableName = $this->tableNames->roles();
+
+        $this->runRepositoryOperation('create role', $tableName, function () use ($role, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf('INSERT INTO %s (id, context_id, name, description) VALUES (:id, :context_id, :name, :description)', $tableName));
             $params = [
                 ':id' => $role->id,
                 ':context_id' => $role->contextId,
@@ -65,8 +74,10 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
 
     public function update(Role $role): void
     {
-        $this->runRepositoryOperation('update role', '_jomisacu_roles', function () use ($role): void {
-            $statement = $this->pdo->prepare('UPDATE _jomisacu_roles SET name = :name, description = :description WHERE id = :id');
+        $tableName = $this->tableNames->roles();
+
+        $this->runRepositoryOperation('update role', $tableName, function () use ($role, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf('UPDATE %s SET name = :name, description = :description WHERE id = :id', $tableName));
             $params = [
                 ':id' => $role->id,
                 ':name' => $role->name,
@@ -78,8 +89,10 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
 
     public function delete(Role $role): void
     {
-        $this->runRepositoryOperation('delete role', '_jomisacu_roles', function () use ($role): void {
-            $statement = $this->pdo->prepare('DELETE FROM _jomisacu_roles WHERE id = :id');
+        $tableName = $this->tableNames->roles();
+
+        $this->runRepositoryOperation('delete role', $tableName, function () use ($role, $tableName): void {
+            $statement = $this->pdo->prepare(sprintf('DELETE FROM %s WHERE id = :id', $tableName));
             $statement->bindValue(':id', $role->id);
             $statement->execute();
         });

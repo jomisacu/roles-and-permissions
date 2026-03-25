@@ -121,6 +121,103 @@ class PermissionCheckerTest extends TestCase
         $this->assertFalse($checker->canAll(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [self::GRANTED_EXPLICITLY_PERMISSION_ID, self::UNGRANTED_PERMISSION_ID], self::GRANTED_RESOURCE_EXPRESSION));
     }
 
+    public function testCheckerReadsFreshExplicitPermissionsOnEveryCall(): void
+    {
+        $actorPermissionRepository = new MutableActorPermissionRelationRepository();
+        $actorPermissionRepository->replacePermissions(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [
+            new ActorPermissionRelation(
+                self::FIRST_CONTEXT_ID,
+                self::FIRST_ACTOR_ID,
+                self::GRANTED_EXPLICITLY_PERMISSION_ID,
+                self::GRANTED_RESOURCE_EXPRESSION,
+                false,
+                null,
+                new \DateTimeImmutable(),
+                null,
+                null,
+            ),
+        ]);
+
+        $checker = new PermissionChecker(
+            new MutableActorRoleRelationRepository(),
+            $this->getResourceMatcher(),
+            $actorPermissionRepository,
+            new MutableRolePermissionRelationRepository(),
+        );
+
+        $this->assertTrue($checker->can(
+            self::FIRST_CONTEXT_ID,
+            self::FIRST_ACTOR_ID,
+            self::GRANTED_EXPLICITLY_PERMISSION_ID,
+            self::GRANTED_RESOURCE_EXPRESSION,
+        ));
+
+        $actorPermissionRepository->replacePermissions(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, []);
+
+        $this->assertFalse($checker->can(
+            self::FIRST_CONTEXT_ID,
+            self::FIRST_ACTOR_ID,
+            self::GRANTED_EXPLICITLY_PERMISSION_ID,
+            self::GRANTED_RESOURCE_EXPRESSION,
+        ));
+    }
+
+    public function testCheckerReadsFreshRoleAssignmentsOnEveryCall(): void
+    {
+        $actorRoleRepository = new MutableActorRoleRelationRepository();
+        $actorRoleRepository->replaceRoles(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [
+            new ActorRoleRelation(
+                self::FIRST_CONTEXT_ID,
+                self::FIRST_ACTOR_ID,
+                self::ASSIGNED_ROLE_ID,
+                null,
+                new \DateTimeImmutable(),
+                null,
+                null,
+            ),
+        ]);
+
+        $rolePermissionRepository = new MutableRolePermissionRelationRepository();
+        $rolePermissionRepository->replaceRelations(self::FIRST_CONTEXT_ID, self::ASSIGNED_ROLE_ID, [
+            new RolePermissionRelation(
+                self::FIRST_CONTEXT_ID,
+                self::ASSIGNED_ROLE_ID,
+                self::GRANTED_THROUGH_ROLE_PERMISSION_ID,
+                self::GRANTED_RESOURCE_EXPRESSION,
+                false,
+                null,
+                new \DateTimeImmutable(),
+                null,
+                null,
+            ),
+        ]);
+
+        $checker = new PermissionChecker(
+            $actorRoleRepository,
+            $this->getResourceMatcher(),
+            new MutableActorPermissionRelationRepository(),
+            $rolePermissionRepository,
+        );
+
+        $this->assertTrue($checker->is(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, self::ASSIGNED_ROLE_ID));
+        $this->assertTrue($checker->can(
+            self::FIRST_CONTEXT_ID,
+            self::FIRST_ACTOR_ID,
+            self::GRANTED_THROUGH_ROLE_PERMISSION_ID,
+            self::GRANTED_RESOURCE_EXPRESSION,
+        ));
+
+        $actorRoleRepository->replaceRoles(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, []);
+
+        $this->assertFalse($checker->is(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, self::ASSIGNED_ROLE_ID));
+        $this->assertFalse($checker->can(
+            self::FIRST_CONTEXT_ID,
+            self::FIRST_ACTOR_ID,
+            self::GRANTED_THROUGH_ROLE_PERMISSION_ID,
+            self::GRANTED_RESOURCE_EXPRESSION,
+        ));
+    }
+
     private function getPermissionChecker(): PermissionChecker
     {
         return new PermissionChecker(
@@ -309,5 +406,103 @@ class PermissionCheckerTest extends TestCase
             {
             }
         };
+    }
+}
+
+final class MutableActorRoleRelationRepository implements ActorRoleRelationRepositoryInterface
+{
+    /**
+     * @var array<string, array<string, array<ActorRoleRelation>>>
+     */
+    private array $roles = [];
+
+    /**
+     * @param ActorRoleRelation[] $relations
+     */
+    public function replaceRoles(string $contextId, string $actorId, array $relations): void
+    {
+        $this->roles[$contextId][$actorId] = $relations;
+    }
+
+    public function findActorRoles(string $contextId, string $actorId): array
+    {
+        return $this->roles[$contextId][$actorId] ?? [];
+    }
+
+    public function create(ActorRoleRelation $actorRoleRelation): void
+    {
+    }
+
+    public function delete(ActorRoleRelation $actorRoleRelation): void
+    {
+    }
+}
+
+final class MutableActorPermissionRelationRepository implements ActorPermissionRelationRepositoryInterface
+{
+    /**
+     * @var array<string, array<string, array<ActorPermissionRelation>>>
+     */
+    private array $permissions = [];
+
+    /**
+     * @param ActorPermissionRelation[] $relations
+     */
+    public function replacePermissions(string $contextId, string $actorId, array $relations): void
+    {
+        $this->permissions[$contextId][$actorId] = $relations;
+    }
+
+    public function findByContextAndActor(string $contextId, string $actorId): array
+    {
+        return $this->permissions[$contextId][$actorId] ?? [];
+    }
+
+    public function create(ActorPermissionRelation $actorPermissionRelation): void
+    {
+    }
+
+    public function delete(ActorPermissionRelation $actorPermissionRelation): void
+    {
+    }
+}
+
+final class MutableRolePermissionRelationRepository implements RolePermissionRelationRepositoryInterface
+{
+    /**
+     * @var array<string, array<string, array<RolePermissionRelation>>>
+     */
+    private array $relations = [];
+
+    /**
+     * @param RolePermissionRelation[] $relations
+     */
+    public function replaceRelations(string $contextId, string $roleId, array $relations): void
+    {
+        $this->relations[$contextId][$roleId] = $relations;
+    }
+
+    public function findByContextAndRole(string $contextId, string $roleId): array
+    {
+        return $this->relations[$contextId][$roleId] ?? [];
+    }
+
+    public function findByContextAndRoles(string $contextId, array $roleIds): array
+    {
+        $result = [];
+
+        foreach ($roleIds as $roleId) {
+            $result = [...$result, ...($this->relations[$contextId][$roleId] ?? [])];
+        }
+
+        return $result;
+    }
+
+    public function create(RolePermissionRelation $rolePermissionRelation): void
+    {
+    }
+
+    public function delete(RolePermissionRelation $rolePermissionRelation): void
+    {
     }
 }

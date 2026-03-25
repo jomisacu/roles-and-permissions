@@ -6,6 +6,7 @@ namespace Jomisacu\RolesAndPermissions\Tests;
 
 use Jomisacu\RolesAndPermissions\Permission;
 use Jomisacu\RolesAndPermissions\PermissionRepositoryMySql;
+use Jomisacu\RolesAndPermissions\UniqueConstraintViolationException;
 use PDO;
 
 class PermissionRepositoryMySqlTest extends MySqlIntegrationTestCase
@@ -104,5 +105,27 @@ class PermissionRepositoryMySqlTest extends MySqlIntegrationTestCase
 
         $permissions = $this->permissionRepository->findByContextId($contextId);
         $this->assertEmpty($permissions);
+    }
+
+    public function testCreateThrowsUniqueConstraintViolationOnDuplicateId(): void
+    {
+        $permission = new Permission(
+            self::PERMISSION_ID,
+            self::CONTEXT_ID,
+            'Test Permission',
+            'Test Permission Description',
+        );
+
+        $this->permissionRepository->create($permission);
+
+        try {
+            $this->permissionRepository->create($permission);
+            $this->fail('Expected duplicate permission creation to fail.');
+        } catch (UniqueConstraintViolationException $exception) {
+            $this->assertSame(1062, $exception->getCode());
+            $this->assertStringContainsString('_jomisacu_permissions', $exception->getMessage());
+        } finally {
+            $this->permissionRepository->delete($permission);
+        }
     }
 }

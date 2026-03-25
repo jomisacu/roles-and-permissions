@@ -6,6 +6,7 @@ namespace Jomisacu\RolesAndPermissions\Tests;
 
 use Jomisacu\RolesAndPermissions\ActorRoleRelation;
 use Jomisacu\RolesAndPermissions\ActorRoleRelationRepositoryMySql;
+use Jomisacu\RolesAndPermissions\ForeignKeyConstraintViolationException;
 use Jomisacu\RolesAndPermissions\Role;
 use Jomisacu\RolesAndPermissions\RoleRepositoryMySql;
 use PDO;
@@ -61,5 +62,23 @@ class ActorRoleRelationRepositoryMySqlTest extends MySqlIntegrationTestCase
         $this->actorRoleRelationRepository->delete($actorRoleRelation);
 
         $this->assertSame([], $this->actorRoleRelationRepository->findActorRoles(self::CONTEXT_ID, self::ACTOR_ID));
+    }
+
+    public function testCreateThrowsForeignKeyConstraintViolationForUnknownRole(): void
+    {
+        $actorRoleRelation = new ActorRoleRelation(
+            self::CONTEXT_ID,
+            self::ACTOR_ID,
+            'missing-role-id',
+            null,
+            new \DateTimeImmutable(),
+            null,
+            null,
+        );
+
+        $this->expectException(ForeignKeyConstraintViolationException::class);
+        $this->expectExceptionCode(1452);
+
+        $this->actorRoleRelationRepository->create($actorRoleRelation);
     }
 }

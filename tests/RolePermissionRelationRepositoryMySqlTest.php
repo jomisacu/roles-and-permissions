@@ -12,9 +12,8 @@ use Jomisacu\RolesAndPermissions\RolePermissionRelationRepositoryMySql;
 use Jomisacu\RolesAndPermissions\RoleRepositoryMySql;
 use PDO;
 use PHPUnit\Framework\Attributes\Depends;
-use PHPUnit\Framework\TestCase;
 
-class RolePermissionRelationRepositoryMySqlTest extends TestCase
+class RolePermissionRelationRepositoryMySqlTest extends MySqlIntegrationTestCase
 {
     const ROLE_ID = 'b8292971-8fea-428f-9a6a-a266c11509f9';
     const PERMISSION_ID = '3b7d8190-3720-4ca0-8a38-0b36c64735a5';
@@ -26,14 +25,7 @@ class RolePermissionRelationRepositoryMySqlTest extends TestCase
 
     protected function setUp(): void
     {
-        $_ENV['DB_TEST_HOST'] ??= 'localhost';
-        $_ENV['DB_TEST_PORT'] ??= '3308';
-        $_ENV['DB_TEST_NAME'] ??= 'roles_and_permissions';
-        $_ENV['DB_TEST_USER'] ??= 'root';
-        $_ENV['DB_TEST_PASSWORD'] ??= '';
-
-        $this->pdo = new PDO(sprintf("mysql:host=%s:%s;dbname=%s", $_ENV['DB_TEST_HOST'], $_ENV['DB_TEST_PORT'], $_ENV['DB_TEST_NAME']), $_ENV['DB_TEST_USER'], $_ENV['DB_TEST_PASSWORD']);
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->pdo = $this->createPdoConnection();
         $this->rolePermissionRelationRepository = new RolePermissionRelationRepositoryMySql($this->pdo);
 
         $permissionRepository = new PermissionRepositoryMySql($this->pdo);
@@ -45,6 +37,10 @@ class RolePermissionRelationRepositoryMySqlTest extends TestCase
 
     protected function tearDown(): void
     {
+        if (!isset($this->pdo)) {
+            return;
+        }
+
         $permissionRepository = new PermissionRepositoryMySql($this->pdo);
         $permissionRepository->delete(new Permission(self::PERMISSION_ID, self::CONTEXT_ID, 'Test Permission', 'Test Permission Description'));
 
@@ -129,5 +125,41 @@ class RolePermissionRelationRepositoryMySqlTest extends TestCase
         $this->assertEquals(self::ROLE_ID, $rolePermissionRelations[0]->roleId);
         $this->assertEquals(self::PERMISSION_ID, $rolePermissionRelations[0]->permissionId);
         $this->assertEquals('resource', $rolePermissionRelations[0]->resource);
+    }
+
+    public function testDeleteOnlyRemovesTheExactMatchingRule(): void
+    {
+        $firstRelation = new RolePermissionRelation(
+            self::CONTEXT_ID,
+            self::ROLE_ID,
+            self::PERMISSION_ID,
+            'resource-a',
+            false,
+            null,
+            new \DateTimeImmutable(),
+            null,
+            null,
+        );
+        $secondRelation = new RolePermissionRelation(
+            self::CONTEXT_ID,
+            self::ROLE_ID,
+            self::PERMISSION_ID,
+            'resource-b',
+            false,
+            null,
+            new \DateTimeImmutable(),
+            null,
+            null,
+        );
+
+        $this->rolePermissionRelationRepository->create($firstRelation);
+        $this->rolePermissionRelationRepository->create($secondRelation);
+
+        $this->rolePermissionRelationRepository->delete($firstRelation);
+
+        $rolePermissionRelations = $this->rolePermissionRelationRepository->findByContextAndRole(self::CONTEXT_ID, self::ROLE_ID);
+
+        $this->assertCount(1, $rolePermissionRelations);
+        $this->assertEquals('resource-b', $rolePermissionRelations[0]->resource);
     }
 }

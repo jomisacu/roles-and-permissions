@@ -48,7 +48,7 @@ final class ResourceMatcher implements ResourceMatcherInterface
 
         return array_map(function ($segment) {
             if (str_starts_with($segment, '{') && str_ends_with($segment, '}')) {
-                return explode(',', trim($segment, '{}'));
+                return array_map('trim', explode(',', trim($segment, '{}')));
             }
 
             return [$segment];
@@ -57,31 +57,50 @@ final class ResourceMatcher implements ResourceMatcherInterface
 
     private function matchSegments(array $givenSegments, array $requestedSegments): bool
     {
-        $givenCount = count($givenSegments);
-        $requestedCount = count($requestedSegments);
+        return $this->matchSegmentsAt($givenSegments, $requestedSegments, 0, 0);
+    }
 
-        if ($givenCount > $requestedCount) {
-            return false;
+    private function matchSegmentsAt(array $givenSegments, array $requestedSegments, int $givenIndex, int $requestedIndex): bool
+    {
+        if ($givenIndex === count($givenSegments)) {
+            return $requestedIndex === count($requestedSegments);
         }
 
-        for ($i = 0; $i < $givenCount; $i++) {
-            if (in_array('*', $givenSegments[$i])) {
+        $givenSegment = $givenSegments[$givenIndex];
+
+        if (in_array('*', $givenSegment, true)) {
+            if ($givenIndex === count($givenSegments) - 1) {
                 return true;
             }
 
-            $matchFound = false;
-            foreach ($givenSegments[$i] as $option) {
-                if (in_array($option, $requestedSegments[$i])) {
-                    $matchFound = true;
-                    break;
+            for ($nextRequestedIndex = $requestedIndex; $nextRequestedIndex <= count($requestedSegments); $nextRequestedIndex++) {
+                if ($this->matchSegmentsAt($givenSegments, $requestedSegments, $givenIndex + 1, $nextRequestedIndex)) {
+                    return true;
                 }
             }
 
-            if (!$matchFound) {
-                return false;
+            return false;
+        }
+
+        if ($requestedIndex >= count($requestedSegments)) {
+            return false;
+        }
+
+        if (!$this->segmentsMatch($givenSegment, $requestedSegments[$requestedIndex])) {
+            return false;
+        }
+
+        return $this->matchSegmentsAt($givenSegments, $requestedSegments, $givenIndex + 1, $requestedIndex + 1);
+    }
+
+    private function segmentsMatch(array $givenSegment, array $requestedSegment): bool
+    {
+        foreach ($givenSegment as $option) {
+            if (in_array($option, $requestedSegment, true)) {
+                return true;
             }
         }
 
-        return $givenCount === $requestedCount || in_array('*', end($givenSegments));
+        return false;
     }
 }

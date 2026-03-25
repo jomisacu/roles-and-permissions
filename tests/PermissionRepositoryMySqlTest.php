@@ -7,9 +7,8 @@ namespace Jomisacu\RolesAndPermissions\Tests;
 use Jomisacu\RolesAndPermissions\Permission;
 use Jomisacu\RolesAndPermissions\PermissionRepositoryMySql;
 use PDO;
-use PHPUnit\Framework\TestCase;
 
-class PermissionRepositoryMySqlTest extends TestCase
+class PermissionRepositoryMySqlTest extends MySqlIntegrationTestCase
 {
     const PERMISSION_ID = 'b8292971-8fea-428f-9a6a-a266c11509f9';
     const CONTEXT_ID = '3b7d8190-3720-4ca0-8a38-0b36c64735a5';
@@ -20,14 +19,7 @@ class PermissionRepositoryMySqlTest extends TestCase
 
     protected function setUp(): void
     {
-        $_ENV['DB_TEST_HOST'] ??= 'localhost';
-        $_ENV['DB_TEST_PORT'] ??= '3308';
-        $_ENV['DB_TEST_NAME'] ??= 'roles_and_permissions';
-        $_ENV['DB_TEST_USER'] ??= 'root';
-        $_ENV['DB_TEST_PASSWORD'] ??= '';
-
-        $this->pdo = new PDO(sprintf("mysql:host=%s:%s;dbname=%s", $_ENV['DB_TEST_HOST'], $_ENV['DB_TEST_PORT'], $_ENV['DB_TEST_NAME']), $_ENV['DB_TEST_USER'], $_ENV['DB_TEST_PASSWORD']);
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->pdo = $this->createPdoConnection();
         $this->permissionRepository = new PermissionRepositoryMySql($this->pdo);
     }
 

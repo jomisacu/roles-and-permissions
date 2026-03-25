@@ -11,11 +11,6 @@ trait PermissionRelationTrait
         return $this->contextId;
     }
 
-    public function getActorId(): string
-    {
-        return $this->actorId;
-    }
-
     public function getPermissionId(): string
     {
         return $this->permissionId;
@@ -24,5 +19,10 @@ trait PermissionRelationTrait
     public function getResource(): string
     {
         return $this->resource;
+    }
+
+    public function isNegated(): bool
+    {
+        return $this->negated;
     }
 }

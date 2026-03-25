@@ -20,4 +20,9 @@ final class ActorPermissionRelation implements PermissionRelationInterface
         public readonly ?\DateTimeInterface $updatedAt,
     ) {
     }
+
+    public function getActorId(): string
+    {
+        return $this->actorId;
+    }
 }

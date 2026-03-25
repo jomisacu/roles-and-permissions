@@ -8,9 +8,9 @@ interface PermissionRelationInterface
 {
     public function getContextId(): string;
 
-    public function getActorId(): string;
-
     public function getPermissionId(): string;
 
     public function getResource(): string;
+
+    public function isNegated(): bool;
 }

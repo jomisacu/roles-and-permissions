@@ -54,4 +54,21 @@ class ResourceMatcherTest extends TestCase
         $this->assertTrue($matcher->match('namespace::{sub-namespace-1,sub-namespace-2}::*', 'namespace::sub-namespace-1::1'));
         $this->assertTrue($matcher->match('namespace::{sub-namespace-1,sub-namespace-2}::*', 'namespace::sub-namespace-2::1'));
     }
+
+    public function testWildcardInTheMiddleMatchesTrailingSegmentsPrecisely()
+    {
+        $matcher = new ResourceMatcher();
+
+        $this->assertTrue($matcher->match('namespace::*::resource', 'namespace::child::resource'));
+        $this->assertTrue($matcher->match('namespace::*::resource', 'namespace::child::grand-child::resource'));
+        $this->assertTrue($matcher->match('namespace::*::resource', 'namespace::resource'));
+    }
+
+    public function testWildcardInTheMiddleDoesNotIgnoreTrailingSegments()
+    {
+        $matcher = new ResourceMatcher();
+
+        $this->assertFalse($matcher->match('namespace::*::resource', 'namespace::child::other-resource'));
+        $this->assertFalse($matcher->match('namespace::*::resource', 'namespace::child::grand-child::other-resource'));
+    }
 }

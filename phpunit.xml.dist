@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache"
+         colors="true">
+    <php>
+        <env name="DB_TEST_HOST" value="127.0.0.1"/>
+        <env name="DB_TEST_PORT" value="3309"/>
+        <env name="DB_TEST_NAME" value="roles_and_permissions_test"/>
+        <env name="DB_TEST_USER" value="root"/>
+        <env name="DB_TEST_PASSWORD" value=""/>
+    </php>
+    <testsuites>
+        <testsuite name="roles-and-permissions">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -54,7 +54,7 @@ final class ActorRoleRelationRepositoryMySql implements ActorRoleRelationReposit
             'actorId' => $actorRoleRelation->actorId,
             'roleId' => $actorRoleRelation->roleId,
             'createdByUserId' => $actorRoleRelation->createdByUserId,
-            'createdAt' => $actorRoleRelation->createdAt,
+            'createdAt' => $actorRoleRelation->createdAt->format('Y-m-d H:i:s'),
         ]);
     }
 

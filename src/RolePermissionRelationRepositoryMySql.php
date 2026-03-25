@@ -89,12 +89,18 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
     {
         $statement = $this->pdo->prepare('
             DELETE FROM _jomisacu_role_permission_relations
-            WHERE context_id = :contextId AND role_id = :roleId AND permission_id = :permissionId
+            WHERE context_id = :contextId
+              AND role_id = :roleId
+              AND permission_id = :permissionId
+              AND resource = :resource
+              AND negated = :negated
         ');
         $statement->execute([
             'contextId' => $rolePermissionRelation->contextId,
             'roleId' => $rolePermissionRelation->roleId,
             'permissionId' => $rolePermissionRelation->permissionId,
+            'resource' => $rolePermissionRelation->resource,
+            'negated' => $rolePermissionRelation->negated ? 1 : 0,
         ]);
     }
 }

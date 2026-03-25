@@ -19,6 +19,7 @@ class PermissionCheckerTest extends TestCase
     private const FIRST_CONTEXT_ID = 'FIRST_CONTEXT_ID';
     private const SECOND_CONTEXT_ID = 'SECOND_CONTEXT_ID';
     private const ASSIGNED_ROLE_ID = 'ASSIGNED_ROLE_ID';
+    private const ASSIGNED_ROLE_ID_2 = 'ASSIGNED_ROLE_ID_2';
     private const UNASSIGNED_ROLE_ID = 'UNASSIGNED_ROLE_ID';
     private const GRANTED_EXPLICITLY_PERMISSION_ID = 'GRANTED_EXPLICITLY_PERMISSION_ID';
     private const GRANTED_EXPLICITLY_PERMISSION_ID_2 = 'GRANTED_EXPLICITLY_PERMISSION_ID_2';
@@ -52,7 +53,7 @@ class PermissionCheckerTest extends TestCase
     {
         $checker = $this->getPermissionChecker();
 
-        $this->assertTrue($checker->canAny(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [self::GRANTED_EXPLICITLY_PERMISSION_ID, self::GRANTED_EXPLICITLY_PERMISSION_ID_2], self::GRANTED_RESOURCE_EXPRESSION));
+        $this->assertTrue($checker->canAll(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [self::GRANTED_EXPLICITLY_PERMISSION_ID, self::GRANTED_EXPLICITLY_PERMISSION_ID_2], self::GRANTED_RESOURCE_EXPRESSION));
     }
 
     public function testActorCanPerformAnActionByGrantedPermissionByRole()
@@ -80,7 +81,7 @@ class PermissionCheckerTest extends TestCase
     {
         $checker = $this->getPermissionChecker();
 
-        $this->assertFalse($checker->can(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, self::NEGATED_BY_ROLE_RESOURCE_EXPRESSION, self::NEGATED_RESOURCE_EXPRESSION));
+        $this->assertFalse($checker->can(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, self::NEGATED_THROUGH_ROLE_PERMISSION_ID, self::NEGATED_BY_ROLE_RESOURCE_EXPRESSION));
     }
 
     public function testActorIsSomeoneWithAGivenRole()
@@ -95,6 +96,29 @@ class PermissionCheckerTest extends TestCase
         $checker = $this->getPermissionChecker();
 
         $this->assertTrue($checker->isAny(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [self::ASSIGNED_ROLE_ID, self::UNASSIGNED_ROLE_ID]));
+    }
+
+    public function testActorIsSomeoneWithAllRequestedRolesEvenWithAdditionalAssignedRoles()
+    {
+        $checker = $this->getPermissionChecker();
+
+        $this->assertTrue($checker->isAll(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [self::ASSIGNED_ROLE_ID]));
+        $this->assertTrue($checker->isAll(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [self::ASSIGNED_ROLE_ID, self::ASSIGNED_ROLE_ID_2]));
+    }
+
+    public function testActorIsNotSomeoneWithoutAllRequestedRoles()
+    {
+        $checker = $this->getPermissionChecker();
+
+        $this->assertFalse($checker->isAll(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [self::ASSIGNED_ROLE_ID, self::UNASSIGNED_ROLE_ID]));
+        $this->assertFalse($checker->isAll(self::FIRST_CONTEXT_ID, self::SECOND_ACTOR_ID, [self::ASSIGNED_ROLE_ID]));
+    }
+
+    public function testActorCanNotPerformAnActionIfMissingOnePermissionWhenCheckingAll()
+    {
+        $checker = $this->getPermissionChecker();
+
+        $this->assertFalse($checker->canAll(self::FIRST_CONTEXT_ID, self::FIRST_ACTOR_ID, [self::GRANTED_EXPLICITLY_PERMISSION_ID, self::UNGRANTED_PERMISSION_ID], self::GRANTED_RESOURCE_EXPRESSION));
     }
 
     private function getPermissionChecker(): PermissionChecker
@@ -184,6 +208,17 @@ class PermissionCheckerTest extends TestCase
                             new ActorPermissionRelation(
                                 'FIRST_CONTEXT_ID',
                                 'FIRST_ACTOR_ID',
+                                'GRANTED_EXPLICITLY_PERMISSION_ID_2',
+                                'GRANTED_RESOURCE_EXPRESSION',
+                                false,
+                                null,
+                                new \DateTimeImmutable(),
+                                null,
+                                null,
+                            ),
+                            new ActorPermissionRelation(
+                                'FIRST_CONTEXT_ID',
+                                'FIRST_ACTOR_ID',
                                 'NEGATED_EXPLICITLY_PERMISSION_ID',
                                 'GRANTED_RESOURCE_EXPRESSION',
                                 true,
@@ -217,27 +252,17 @@ class PermissionCheckerTest extends TestCase
         return new class implements RolePermissionRelationRepositoryInterface {
             public function findByContextAndRole(string $contextId, string $roleId): array
             {
-                return [
-                    new RolePermissionRelation(
-                        $contextId,
-                        $roleId,
-                        'GRANTED_THROUGH_ROLE_PERMISSION_ID',
-                        'GRANTED_RESOURCE_EXPRESSION',
-                        false,
-                        null,
-                        new \DateTimeImmutable(),
-                        null,
-                        null,
-                    )
-                ];
+                return $this->findByContextAndRoles($contextId, [$roleId]);
             }
 
             public function findByContextAndRoles(string $contextId, array $roleIds): array
             {
-                return [
-                    new RolePermissionRelation(
+                $relations = [];
+
+                if (in_array('ASSIGNED_ROLE_ID', $roleIds, true)) {
+                    $relations[] = new RolePermissionRelation(
                         $contextId,
-                        $roleIds[0],
+                        'ASSIGNED_ROLE_ID',
                         'GRANTED_THROUGH_ROLE_PERMISSION_ID',
                         'GRANTED_RESOURCE_EXPRESSION',
                         false,
@@ -245,10 +270,13 @@ class PermissionCheckerTest extends TestCase
                         new \DateTimeImmutable(),
                         null,
                         null,
-                    ),
-                    new RolePermissionRelation(
+                    );
+                }
+
+                if (in_array('ASSIGNED_ROLE_ID_2', $roleIds, true)) {
+                    $relations[] = new RolePermissionRelation(
                         $contextId,
-                        $roleIds[1],
+                        'ASSIGNED_ROLE_ID_2',
                         'GRANTED_THROUGH_ROLE_PERMISSION_ID_2',
                         'GRANTED_RESOURCE_EXPRESSION',
                         false,
@@ -256,8 +284,21 @@ class PermissionCheckerTest extends TestCase
                         new \DateTimeImmutable(),
                         null,
                         null,
-                    ),
-                ];
+                    );
+                    $relations[] = new RolePermissionRelation(
+                        $contextId,
+                        'ASSIGNED_ROLE_ID_2',
+                        'NEGATED_THROUGH_ROLE_PERMISSION_ID',
+                        'NEGATED_BY_ROLE_RESOURCE_EXPRESSION',
+                        true,
+                        null,
+                        new \DateTimeImmutable(),
+                        null,
+                        null,
+                    );
+                }
+
+                return $relations;
             }
 
             public function create(RolePermissionRelation $rolePermissionRelation): void

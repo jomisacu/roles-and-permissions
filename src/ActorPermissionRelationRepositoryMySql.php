@@ -64,12 +64,18 @@ final class ActorPermissionRelationRepositoryMySql implements ActorPermissionRel
     {
         $statement = $this->pdo->prepare('
             DELETE FROM _jomisacu_actor_permission_relations
-            WHERE context_id = :contextId AND actor_id = :actorId AND permission_id = :permissionId
+            WHERE context_id = :contextId
+              AND actor_id = :actorId
+              AND permission_id = :permissionId
+              AND resource = :resource
+              AND negated = :negated
         ');
         $statement->execute([
             'contextId' => $actorPermissionRelation->contextId,
             'actorId' => $actorPermissionRelation->actorId,
             'permissionId' => $actorPermissionRelation->permissionId,
+            'resource' => $actorPermissionRelation->resource,
+            'negated' => $actorPermissionRelation->negated ? 1 : 0,
         ]);
     }
 }

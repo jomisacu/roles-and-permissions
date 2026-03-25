@@ -17,7 +17,7 @@ final class PermissionChecker implements PermissionCheckerInterface
     ) {
     }
 
-    function isAny(string $contextId, string $actorId, array $roleIds): bool
+    public function isAny(string $contextId, string $actorId, array $roleIds): bool
     {
         foreach ($roleIds as $roleId) {
             if ($this->is($contextId, $actorId, $roleId)) {
@@ -28,7 +28,7 @@ final class PermissionChecker implements PermissionCheckerInterface
         return false;
     }
 
-    function is(string $contextId, string $actorId, string $roleId): bool
+    public function is(string $contextId, string $actorId, string $roleId): bool
     {
         foreach ($this->getActorRoles($contextId, $actorId) as $relation) {
             if ($relation->roleId === $roleId) {
@@ -39,7 +39,10 @@ final class PermissionChecker implements PermissionCheckerInterface
         return false;
     }
 
-    private function getActorRoles(string $contextId, string $actorId): mixed
+    /**
+     * @return ActorRoleRelation[]
+     */
+    private function getActorRoles(string $contextId, string $actorId): array
     {
         $this->loadActorRoles($contextId, $actorId);
 
@@ -53,10 +56,19 @@ final class PermissionChecker implements PermissionCheckerInterface
         }
     }
 
-    function isAll(string $contextId, string $actorId, array $roleIds): bool
+    public function isAll(string $contextId, string $actorId, array $roleIds): bool
     {
-        foreach ($this->getActorRoles($contextId, $actorId) as $relation) {
-            if (!in_array($relation->roleId, $roleIds, true)) {
+        if ($roleIds === []) {
+            return true;
+        }
+
+        $assignedRoleIds = array_map(
+            static fn (ActorRoleRelation $relation): string => $relation->roleId,
+            $this->getActorRoles($contextId, $actorId),
+        );
+
+        foreach ($roleIds as $roleId) {
+            if (!in_array($roleId, $assignedRoleIds, true)) {
                 return false;
             }
         }
@@ -64,7 +76,7 @@ final class PermissionChecker implements PermissionCheckerInterface
         return true;
     }
 
-    function canAny(string $contextId, string $actorId, array $permissionIds, string $resource): bool
+    public function canAny(string $contextId, string $actorId, array $permissionIds, string $resource): bool
     {
         foreach ($permissionIds as $permissionId) {
             if ($this->can($contextId, $actorId, $permissionId, $resource)) {
@@ -75,7 +87,7 @@ final class PermissionChecker implements PermissionCheckerInterface
         return false;
     }
 
-    function can(string $contextId, string $actorId, string $permissionId, string $resource): bool
+    public function can(string $contextId, string $actorId, string $permissionId, string $resource): bool
     {
         if ($this->permissionNegatedToThisActor($contextId, $actorId, $permissionId, $resource)) {
             return false;
@@ -92,7 +104,7 @@ final class PermissionChecker implements PermissionCheckerInterface
     ): bool {
         foreach ($this->getActorPermissions($contextId, $actorId) as $permissionRelation) {
             if ($permissionRelation->getPermissionId() === $permissionId && $this->resourceMatcher->match($permissionRelation->getResource(), $resource)) {
-                if ($permissionRelation->negated) {
+                if ($permissionRelation->isNegated()) {
                     return true;
                 }
             }
@@ -146,7 +158,7 @@ final class PermissionChecker implements PermissionCheckerInterface
     ): bool {
         foreach ($this->getActorPermissions($contextId, $actorId) as $permissionRelation) {
             if ($permissionRelation->getPermissionId() === $permissionId && $this->resourceMatcher->match($permissionRelation->getResource(), $resource)) {
-                if (!$permissionRelation->negated) {
+                if (!$permissionRelation->isNegated()) {
                     return true;
                 }
             }
@@ -155,7 +167,7 @@ final class PermissionChecker implements PermissionCheckerInterface
         return false;
     }
 
-    function canAll(string $contextId, string $actorId, array $permissionIds, string $resource): bool
+    public function canAll(string $contextId, string $actorId, array $permissionIds, string $resource): bool
     {
         foreach ($permissionIds as $permissionId) {
             if (!$this->can($contextId, $actorId, $permissionId, $resource)) {

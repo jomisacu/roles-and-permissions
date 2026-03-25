@@ -20,4 +20,9 @@ final class RolePermissionRelation implements PermissionRelationInterface
         public readonly ?\DateTimeInterface $updatedAt,
     ) {
     }
+
+    public function getRoleId(): string
+    {
+        return $this->roleId;
+    }
 }

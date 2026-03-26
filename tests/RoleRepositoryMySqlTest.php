@@ -19,6 +19,7 @@ class RoleRepositoryMySqlTest extends MySqlIntegrationTestCase
     protected function setUp(): void
     {
         $this->pdo = $this->createPdoConnection();
+        $this->ensureMySqlSchema($this->pdo, '_jomisacu_');
         $this->roleRepository = new RoleRepositoryMySql($this->pdo);
     }
 

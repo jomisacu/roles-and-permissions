@@ -39,19 +39,23 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
         });
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     * @return array<RolePermissionRelation>
+     */
     private function parseRows(array $rows): array
     {
-        return array_map(function ($row) {
+        return array_map(static function (array $row): RolePermissionRelation {
             return new RolePermissionRelation(
-                contextId:       $row['context_id'],
-                roleId:          $row['role_id'],
-                permissionId:    $row['permission_id'],
-                resource:        $row['resource'],
-                negated:         (bool)$row['negated'],
-                createdByUserId: $row['created_by_user_id'],
-                createdAt:       new DateTimeImmutable($row['created_at']),
-                updatedByUserId: $row['updated_by_user_id'],
-                updatedAt:       isset($row['updated_at']) ? new DateTimeImmutable($row['updated_at']) : null,
+                contextId:       (string) $row['context_id'],
+                roleId:          (string) $row['role_id'],
+                permissionId:    (string) $row['permission_id'],
+                resource:        (string) $row['resource'],
+                negated:         (bool) $row['negated'],
+                createdByUserId: isset($row['created_by_user_id']) ? (string) $row['created_by_user_id'] : null,
+                createdAt:       new DateTimeImmutable((string) $row['created_at']),
+                updatedByUserId: isset($row['updated_by_user_id']) ? (string) $row['updated_by_user_id'] : null,
+                updatedAt:       isset($row['updated_at']) ? new DateTimeImmutable((string) $row['updated_at']) : null,
             );
         }, $rows);
     }

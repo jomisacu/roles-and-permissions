@@ -17,6 +17,24 @@ final class PermissionRepositoryPostgres implements PermissionRepositoryInterfac
         $this->tableNames = $tableNames ?? PostgresTableNames::default();
     }
 
+    public function findById(string $id): ?Permission
+    {
+        $tableName = $this->tableNames->permissions();
+
+        return $this->runRepositoryOperation('find permission by id', $tableName, function () use ($id, $tableName): ?Permission {
+            $statement = $this->pdo->prepare(sprintf('SELECT * FROM %s WHERE id = :id', $tableName));
+            $statement->bindValue(':id', $id);
+            $statement->execute();
+
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
+            if ($result === false) {
+                return null;
+            }
+
+            return new Permission((string) $result['id'], (string) $result['context_id'], (string) $result['name'], isset($result['description']) ? (string) $result['description'] : null);
+        });
+    }
+
     public function findByContextId(string $contextId): array
     {
         $tableName = $this->tableNames->permissions();

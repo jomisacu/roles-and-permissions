@@ -35,7 +35,7 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
                 return null;
             }
 
-            return new Role($result['id'], $result['context_id'], $result['name'], $result['description']);
+            return new Role((string) $result['id'], (string) $result['context_id'], (string) $result['name'], isset($result['description']) ? (string) $result['description'] : null);
         });
     }
 
@@ -50,8 +50,8 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
 
             $roles = $statement->fetchAll(PDO::FETCH_ASSOC);
 
-            return array_map(function ($role) {
-                return new Role($role['id'], $role['context_id'], $role['name'], $role['description']);
+            return array_map(static function (array $role): Role {
+                return new Role((string) $role['id'], (string) $role['context_id'], (string) $role['name'], isset($role['description']) ? (string) $role['description'] : null);
             }, $roles);
         });
     }

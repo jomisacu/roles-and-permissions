@@ -90,15 +90,15 @@ final class RolePermissionRelationRepositoryPostgres implements RolePermissionRe
     {
         return array_map(static function (array $row): RolePermissionRelation {
             return new RolePermissionRelation(
-                contextId: $row['context_id'],
-                roleId: $row['role_id'],
-                permissionId: $row['permission_id'],
-                resource: $row['resource'],
+                contextId: (string) $row['context_id'],
+                roleId: (string) $row['role_id'],
+                permissionId: (string) $row['permission_id'],
+                resource: (string) $row['resource'],
                 negated: PostgresValueCaster::toBool($row['negated']),
-                createdByUserId: $row['created_by_user_id'],
-                createdAt: new DateTimeImmutable($row['created_at']),
-                updatedByUserId: $row['updated_by_user_id'],
-                updatedAt: isset($row['updated_at']) ? new DateTimeImmutable($row['updated_at']) : null,
+                createdByUserId: isset($row['created_by_user_id']) ? (string) $row['created_by_user_id'] : null,
+                createdAt: new DateTimeImmutable((string) $row['created_at']),
+                updatedByUserId: isset($row['updated_by_user_id']) ? (string) $row['updated_by_user_id'] : null,
+                updatedAt: isset($row['updated_at']) ? new DateTimeImmutable((string) $row['updated_at']) : null,
             );
         }, $rows);
     }

@@ -38,6 +38,9 @@ final class ResourceMatcher implements ResourceMatcherInterface
         return $this->matchSegments($grantedExpressionSegments, $requestedResourceExpressionSegments);
     }
 
+    /**
+     * @return array<array<string>>
+     */
     private function parseExpression(string $expression): array
     {
         if (empty($expression)) {
@@ -55,11 +58,19 @@ final class ResourceMatcher implements ResourceMatcherInterface
         }, $segments);
     }
 
+    /**
+     * @param array<array<string>> $givenSegments
+     * @param array<array<string>> $requestedSegments
+     */
     private function matchSegments(array $givenSegments, array $requestedSegments): bool
     {
         return $this->matchSegmentsAt($givenSegments, $requestedSegments, 0, 0);
     }
 
+    /**
+     * @param array<array<string>> $givenSegments
+     * @param array<array<string>> $requestedSegments
+     */
     private function matchSegmentsAt(array $givenSegments, array $requestedSegments, int $givenIndex, int $requestedIndex): bool
     {
         if ($givenIndex === count($givenSegments)) {
@@ -93,6 +104,10 @@ final class ResourceMatcher implements ResourceMatcherInterface
         return $this->matchSegmentsAt($givenSegments, $requestedSegments, $givenIndex + 1, $requestedIndex + 1);
     }
 
+    /**
+     * @param array<string> $givenSegment
+     * @param array<string> $requestedSegment
+     */
     private function segmentsMatch(array $givenSegment, array $requestedSegment): bool
     {
         foreach ($givenSegment as $option) {

@@ -18,6 +18,24 @@ final class PermissionRepositoryMySql implements PermissionRepositoryInterface
     ) {
         $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
+    public function findById(string $id): ?Permission
+    {
+        $tableName = $this->tableNames->permissions();
+
+        return $this->runRepositoryOperation('find permission by id', $tableName, function () use ($id, $tableName): ?Permission {
+            $statement = $this->pdo->prepare(sprintf('SELECT * FROM %s WHERE id = :id', $tableName));
+            $statement->bindValue(':id', $id);
+            $statement->execute();
+
+            $result = $statement->fetch(\PDO::FETCH_ASSOC);
+            if ($result === false) {
+                return null;
+            }
+
+            return new Permission((string) $result['id'], (string) $result['context_id'], (string) $result['name'], isset($result['description']) ? (string) $result['description'] : null);
+        });
+    }
+
     /**
      * @inheritDoc
      */

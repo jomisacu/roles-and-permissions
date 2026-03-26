@@ -24,6 +24,7 @@ class ActorPermissionRelationRepositoryMySqlTest extends MySqlIntegrationTestCas
     protected function setUp(): void
     {
         $this->pdo = $this->createPdoConnection();
+        $this->ensureMySqlSchema($this->pdo, '_jomisacu_');
         $this->actorPermissionRelationRepository = new ActorPermissionRelationRepositoryMySql($this->pdo);
 
         $permissionRepository = new PermissionRepositoryMySql($this->pdo);

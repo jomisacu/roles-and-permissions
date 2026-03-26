@@ -21,6 +21,7 @@ class PermissionRepositoryMySqlTest extends MySqlIntegrationTestCase
     protected function setUp(): void
     {
         $this->pdo = $this->createPdoConnection();
+        $this->ensureMySqlSchema($this->pdo, '_jomisacu_');
         $this->permissionRepository = new PermissionRepositoryMySql($this->pdo);
     }
 

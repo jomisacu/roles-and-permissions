@@ -31,7 +31,7 @@ final class RoleRepositoryPostgres implements RoleRepositoryInterface
                 return null;
             }
 
-            return new Role($result['id'], $result['context_id'], $result['name'], $result['description']);
+            return new Role((string) $result['id'], (string) $result['context_id'], (string) $result['name'], isset($result['description']) ? (string) $result['description'] : null);
         });
     }
 
@@ -45,7 +45,7 @@ final class RoleRepositoryPostgres implements RoleRepositoryInterface
             $statement->execute();
 
             return array_map(
-                static fn (array $row): Role => new Role($row['id'], $row['context_id'], $row['name'], $row['description']),
+                static fn (array $row): Role => new Role((string) $row['id'], (string) $row['context_id'], (string) $row['name'], isset($row['description']) ? (string) $row['description'] : null),
                 $statement->fetchAll(PDO::FETCH_ASSOC),
             );
         });

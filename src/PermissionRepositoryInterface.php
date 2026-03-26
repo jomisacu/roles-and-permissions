@@ -6,6 +6,8 @@ namespace Jomisacu\RolesAndPermissions;
 
 interface PermissionRepositoryInterface
 {
+    public function findById(string $id): ?Permission;
+
     /**
      * @return Permission[]
      */

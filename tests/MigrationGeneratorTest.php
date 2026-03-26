@@ -24,11 +24,13 @@ final class MigrationGeneratorTest extends TestCase
 
         $files = $generator->generate($options);
 
-        $this->assertCount(2, $files);
+        $this->assertCount(3, $files);
         $this->assertSame('/tmp/generated-migrations/0001_initial_schema.sql', $files[0]->path);
         $this->assertSame('/tmp/generated-migrations/0002_harden_relation_constraints.sql', $files[1]->path);
+        $this->assertSame('/tmp/generated-migrations/0003_add_resource_hash.sql', $files[2]->path);
         $this->assertStringContainsString('create table _jomisacu_permissions', $files[0]->contents);
         $this->assertStringContainsString('create unique index _jomisacu_actor_permission_relations_unique_rule', $files[1]->contents);
+        $this->assertStringContainsString('resource_hash', $files[2]->contents);
     }
 
     public function testGeneratesLaravelMigrationFiles(): void
@@ -43,11 +45,12 @@ final class MigrationGeneratorTest extends TestCase
 
         $files = $generator->generate($options);
 
-        $this->assertCount(2, $files);
+        $this->assertCount(3, $files);
         $this->assertSame('/tmp/generated-laravel-migrations/2000_01_01_000001_initial_schema.php', $files[0]->path);
         $this->assertStringContainsString('use Illuminate\\Database\\Migrations\\Migration;', $files[0]->contents);
         $this->assertStringContainsString('create table acme_permissions', $files[0]->contents);
         $this->assertStringContainsString('DB::statement', $files[1]->contents);
+        $this->assertStringContainsString('resource_hash', $files[2]->contents);
     }
 
     public function testGeneratesSymfonyPostgresMigrationFilesThroughCommand(): void
@@ -68,6 +71,7 @@ final class MigrationGeneratorTest extends TestCase
             $this->assertSame(0, $exitCode);
             $this->assertFileExists($tempDirectory . '/migrations/Version20000101000001.php');
             $this->assertFileExists($tempDirectory . '/migrations/Version20000101000002.php');
+            $this->assertFileExists($tempDirectory . '/migrations/Version20000101000003.php');
 
             $firstMigration = file_get_contents($tempDirectory . '/migrations/Version20000101000001.php');
             $secondMigration = file_get_contents($tempDirectory . '/migrations/Version20000101000002.php');

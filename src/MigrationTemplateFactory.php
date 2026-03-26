@@ -9,6 +9,7 @@ final class MigrationTemplateFactory
     private const MIGRATION_BLUEPRINTS = [
         'initial_schema' => 'Bootstrap roles and permissions schema.',
         'harden_relation_constraints' => 'Add relation uniqueness and actor role update tracking.',
+        'add_resource_hash' => 'Add resource hash column for full-length unique constraint on permission relations.',
     ];
 
     /**

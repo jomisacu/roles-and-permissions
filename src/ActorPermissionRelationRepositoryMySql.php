@@ -58,7 +58,7 @@ final class ActorPermissionRelationRepositoryMySql implements ActorPermissionRel
 
         $this->runRepositoryOperation('create actor permission relation', $tableName, function () use ($actorPermissionRelation, $tableName): void {
             $statement = $this->pdo->prepare(sprintf(
-                'INSERT INTO %s (context_id, actor_id, permission_id, resource, negated, created_by_user_id, created_at) VALUES (:contextId, :actorId, :permissionId, :resource, :negated, :createdByUserId, :createdAt)',
+                'INSERT INTO %s (context_id, actor_id, permission_id, resource, resource_hash, negated, created_by_user_id, created_at) VALUES (:contextId, :actorId, :permissionId, :resource, :resourceHash, :negated, :createdByUserId, :createdAt)',
                 $tableName,
             ));
             $statement->execute([
@@ -66,6 +66,7 @@ final class ActorPermissionRelationRepositoryMySql implements ActorPermissionRel
                 'actorId' => $actorPermissionRelation->actorId,
                 'permissionId' => $actorPermissionRelation->permissionId,
                 'resource' => $actorPermissionRelation->resource,
+                'resourceHash' => hash('sha256', $actorPermissionRelation->resource),
                 'negated' => $actorPermissionRelation->negated ? 1 : 0,
                 'createdByUserId' => $actorPermissionRelation->createdByUserId,
                 'createdAt' => $actorPermissionRelation->createdAt->format('Y-m-d H:i:s'),

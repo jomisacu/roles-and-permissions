@@ -87,7 +87,7 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
 
         $this->runRepositoryOperation('create role permission relation', $tableName, function () use ($rolePermissionRelation, $tableName): void {
             $statement = $this->pdo->prepare(sprintf(
-                'INSERT INTO %s (context_id, role_id, permission_id, resource, negated, created_by_user_id, created_at) VALUES (:contextId, :roleId, :permissionId, :resource, :negated, :createdByUserId, :createdAt)',
+                'INSERT INTO %s (context_id, role_id, permission_id, resource, resource_hash, negated, created_by_user_id, created_at) VALUES (:contextId, :roleId, :permissionId, :resource, :resourceHash, :negated, :createdByUserId, :createdAt)',
                 $tableName,
             ));
             $statement->execute([
@@ -95,6 +95,7 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
                 'roleId' => $rolePermissionRelation->roleId,
                 'permissionId' => $rolePermissionRelation->permissionId,
                 'resource' => $rolePermissionRelation->resource,
+                'resourceHash' => hash('sha256', $rolePermissionRelation->resource),
                 'negated' => $rolePermissionRelation->negated ? 1 : 0,
                 'createdByUserId' => $rolePermissionRelation->createdByUserId,
                 'createdAt' => $rolePermissionRelation->createdAt->format('Y-m-d H:i:s'),

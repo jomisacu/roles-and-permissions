@@ -13,6 +13,7 @@ create table _jomisacu_actor_permission_relations
     actor_id           char(36)             not null,
     permission_id      char(36)             not null,
     resource           text                 not null,
+    resource_hash      char(64)             not null,
     negated            tinyint(1) default 0 not null,
     created_by_user_id char(36)             null,
     created_at         datetime             not null,
@@ -27,7 +28,7 @@ create index _jomisacu_actor_permission_relations_context_id_actor_id_index
     on _jomisacu_actor_permission_relations (context_id, actor_id);
 
 create unique index _jomisacu_actor_permission_relations_unique_rule
-    on _jomisacu_actor_permission_relations (context_id, actor_id, permission_id, negated, resource(191));
+    on _jomisacu_actor_permission_relations (context_id, actor_id, permission_id, negated, resource_hash);
 
 create index _jomisacu_permissions_context_id_index
     on _jomisacu_permissions (context_id);
@@ -67,6 +68,7 @@ create table _jomisacu_role_permission_relations
     role_id            char(36)             not null,
     permission_id      char(36)             not null,
     resource           text                 not null,
+    resource_hash      char(64)             not null,
     negated            tinyint(1) default 0 not null,
     created_by_user_id char(36)             null,
     created_at         datetime             not null,
@@ -84,7 +86,7 @@ create index _jomisacu_role_permission_relations_context_id_role_id_index
     on _jomisacu_role_permission_relations (context_id, role_id);
 
 create unique index _jomisacu_role_permission_relations_unique_rule
-    on _jomisacu_role_permission_relations (context_id, role_id, permission_id, negated, resource(191));
+    on _jomisacu_role_permission_relations (context_id, role_id, permission_id, negated, resource_hash);
 
 create index _jomisacu_roles_context_id_index
     on _jomisacu_roles (context_id);

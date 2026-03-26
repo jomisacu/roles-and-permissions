@@ -1,13 +1,23 @@
 # Roles and Permissions
 
-Small PHP package for role and permission checks backed by MySQL and PostgreSQL.
+[![CI](https://github.com/jomisacu/roles-and-permissions/actions/workflows/ci.yml/badge.svg)](https://github.com/jomisacu/roles-and-permissions/actions)
+
+A framework-agnostic PHP library for managing roles and permissions with multi-tenant support. Zero runtime dependencies — just PHP 8.1+ and PDO.
+
+## Features
+
+- **Multi-tenant** — all data is scoped by a `contextId`, so one installation serves multiple apps, orgs, or workspaces.
+- **Resource-level permissions** — grant or deny permissions on specific resources with wildcard matching (`blog::post::*`).
+- **Permission negation** — explicitly deny a permission, even if granted through a role.
+- **MySQL and PostgreSQL** support.
+- **Framework-agnostic** — works with Laravel, Symfony, or plain PHP. Migration generators included for all three.
+- **In-memory caching** — optional `CachedPermissionChecker` decorator to avoid repeated queries within a request.
 
 ## Requirements
 
 - PHP 8.1+
-- PDO
-- `pdo_mysql` to use the MySQL repositories
-- `pdo_pgsql` to use the PostgreSQL repositories
+- `ext-pdo`
+- `ext-pdo_mysql` (for MySQL) or `ext-pdo_pgsql` (for PostgreSQL)
 
 ## Installation
 
@@ -15,100 +25,144 @@ Small PHP package for role and permission checks backed by MySQL and PostgreSQL.
 composer require jomisacu/roles-and-permissions
 ```
 
-## Database setup
+## Database Setup
 
-Create or select your database first, then apply the schema for your platform:
+Generate migrations for your platform and framework:
+
+```bash
+# Plain PHP + MySQL (default)
+vendor/bin/jomisacu-roles-and-permissions generate-migrations
+
+# Laravel + MySQL
+vendor/bin/jomisacu-roles-and-permissions generate-migrations \
+  --target-framework=laravel \
+  --target-platform=mysql \
+  --migrations-path=database/migrations
+
+# Symfony + PostgreSQL
+vendor/bin/jomisacu-roles-and-permissions generate-migrations \
+  --target-framework=symfony \
+  --target-platform=postgres \
+  --migrations-path=migrations
+
+# Custom table prefix
+vendor/bin/jomisacu-roles-and-permissions generate-migrations \
+  --table-prefix=myapp_
+```
+
+Then run the generated migrations with your usual tool (`php artisan migrate`, `doctrine:migrations:migrate`, etc.).
+
+Alternatively, apply the consolidated schema directly:
 
 ```bash
 mysql -u root -p your_database < database/mysql.sql
 psql your_database < database/postgres.sql
 ```
 
-The schema files assume the target database is already selected.
-
-## Versioned migrations
-
-For production upgrades, use the versioned files in `database/migrations/mysql/` or `database/migrations/postgres/`.
-
-- `0001_initial_schema.sql` bootstraps the original schema
-- `0002_harden_relation_constraints.sql` adds the `updated_at` column on actor-role relations and the unique indexes that protect relation integrity
-
-For an existing installation, apply only the pending files in order. Before running `0002_harden_relation_constraints.sql`, make sure your relation tables do not contain duplicate rows that would violate the new unique indexes.
-
-## Migration generator
-
-The package ships a utility command to scaffold migrations for plain PHP, Laravel, or Symfony projects.
-
-```bash
-vendor/bin/jomisacu-roles-and-permissions generate-migrations --target-framework=php --target-platform=mysql
-```
-
-You can also call the namespaced alias if you prefer:
-
-```bash
-vendor/bin/jomisacu-roles-and-permissions jomisacu:roles-and-permissions:generate-migrations --target-framework=symfony --target-platform=mysql --migrations-path=./migrations
-```
-
-Available options:
-
-- `--table-prefix=_jomisacu_`
-- `--target-framework=php|laravel|symfony`
-- `--migrations-path=./some-path` required for `laravel` and `symfony`
-- `--target-platform=mysql|postgres`
-
-Notes:
-
-- Plain PHP targets default to `./database/migrations/<platform>` when `migrations-path` is omitted.
-- The generator can emit MySQL and PostgreSQL migration templates, and the package ships repository implementations for both platforms.
-
-## Usage
+## Quick Start
 
 ```php
-<?php
+use Jomisacu\RolesAndPermissions\{
+    PermissionChecker,
+    CachedPermissionChecker,
+    ResourceMatcher,
+    ActorRoleRelationRepositoryMySql,
+    ActorPermissionRelationRepositoryMySql,
+    RolePermissionRelationRepositoryMySql,
+};
 
-declare(strict_types=1);
+$pdo = new PDO('mysql:host=127.0.0.1;dbname=myapp', 'user', 'pass');
 
-use Jomisacu\RolesAndPermissions\ActorPermissionRelationRepositoryMySql;
-use Jomisacu\RolesAndPermissions\ActorRoleRelationRepositoryMySql;
-use Jomisacu\RolesAndPermissions\MySqlTableNames;
-use Jomisacu\RolesAndPermissions\PermissionChecker;
-use Jomisacu\RolesAndPermissions\ResourceMatcher;
-use Jomisacu\RolesAndPermissions\RolePermissionRelationRepositoryMySql;
-
-$pdo = new PDO('mysql:host=127.0.0.1;port=3306;dbname=your_database', 'user', 'password');
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-$tableNames = MySqlTableNames::fromPrefix('_jomisacu_');
-
-$checker = new PermissionChecker(
-    new ActorRoleRelationRepositoryMySql($pdo, $tableNames),
-    new ResourceMatcher(),
-    new ActorPermissionRelationRepositoryMySql($pdo, $tableNames),
-    new RolePermissionRelationRepositoryMySql($pdo, $tableNames),
+// Permission checker (wrap with CachedPermissionChecker for production)
+$checker = new CachedPermissionChecker(
+    new PermissionChecker(
+        new ActorRoleRelationRepositoryMySql($pdo),
+        new ResourceMatcher(),
+        new ActorPermissionRelationRepositoryMySql($pdo),
+        new RolePermissionRelationRepositoryMySql($pdo),
+    )
 );
-
-$canPublish = $checker->can(
-    contextId: 'context-id',
-    actorId: 'actor-id',
-    permissionId: 'publish-posts',
-    resource: 'blog::post::123',
-);
-
-// PostgreSQL repositories are also available:
-// new ActorRoleRelationRepositoryPostgres($pdo, PostgresTableNames::fromPrefix('_jomisacu_'))
 ```
 
-## Production notes
+## Checking Permissions
 
-- `PermissionChecker` is stateless across calls, so it can be safely reused as a service without keeping stale authorization data in memory.
-- The package ships consolidated schemas in `database/mysql.sql` and `database/postgres.sql`, plus versioned upgrade scripts in `database/migrations/mysql/` and `database/migrations/postgres/`.
-- The SQL repositories raise package exceptions instead of leaking raw PDO errors: `RepositoryException`, `UniqueConstraintViolationException`, and `ForeignKeyConstraintViolationException`.
-- If you generate migrations with a custom table prefix, pass the same prefix to the repositories with `MySqlTableNames::fromPrefix(...)` or `PostgresTableNames::fromPrefix(...)`.
+```php
+$contextId = 'tenant-uuid';
+$actorId   = 'user-uuid';
+
+// Single permission check
+$checker->can($contextId, $actorId, 'edit-posts', 'blog::post::123');
+
+// Any of several permissions
+$checker->canAny($contextId, $actorId, ['edit-posts', 'delete-posts'], 'blog::post::123');
+
+// All permissions required
+$checker->canAll($contextId, $actorId, ['edit-posts', 'publish-posts'], 'blog::post::123');
+```
+
+## Checking Roles
+
+```php
+$checker->is($contextId, $actorId, 'admin');
+$checker->isAny($contextId, $actorId, ['admin', 'editor']);
+$checker->isAll($contextId, $actorId, ['admin', 'editor']);
+```
+
+## Resource Wildcards
+
+Resources use `::` as separator. The `*` wildcard matches any single segment, and `**` matches any number of remaining segments.
+
+| Given permission | Requested resource | Match |
+|---|---|---|
+| `blog::post::*` | `blog::post::123` | ✅ |
+| `blog::*::edit` | `blog::post::edit` | ✅ |
+| `blog::**` | `blog::post::123::comments` | ✅ |
+| `blog::post::*` | `blog::post::123::comments` | ❌ |
+
+## Custom Table Prefix
+
+Pass the same prefix to both the migration generator and the repositories:
+
+```php
+use Jomisacu\RolesAndPermissions\MySqlTableNames;
+
+$tableNames = MySqlTableNames::fromPrefix('myapp_');
+
+$permissions = new PermissionRepositoryMySql($pdo, $tableNames);
+$roles       = new RoleRepositoryMySql($pdo, $tableNames);
+// ... same for all other repositories
+```
+
+## PostgreSQL
+
+Replace `MySql` classes with their `Postgres` equivalents:
+
+```php
+use Jomisacu\RolesAndPermissions\{
+    PermissionRepositoryPostgres,
+    RoleRepositoryPostgres,
+    PostgresTableNames,
+};
+
+$tableNames = PostgresTableNames::fromPrefix('myapp_');
+$permissions = new PermissionRepositoryPostgres($pdo, $tableNames);
+```
+
+## Production Notes
+
+- Wrap `PermissionChecker` with `CachedPermissionChecker` to avoid repeated DB queries within a single request.
+- `PermissionChecker` is stateless across calls, so it can be safely reused as a long-lived service.
+- SQL repositories raise domain exceptions (`RepositoryException`, `UniqueConstraintViolationException`, `ForeignKeyConstraintViolationException`) instead of leaking raw PDO errors.
 
 ## Tests
 
-The test suite reads MySQL connection settings from `phpunit.xml.dist` by default.
-
 ```bash
-vendor/bin/phpunit
+vendor/bin/phpunit        # unit + integration tests
+vendor/bin/phpstan analyse # static analysis (level 8)
 ```
+
+Integration tests require MySQL and PostgreSQL. Connection settings are in `phpunit.xml.dist`. Tests that cannot connect to a database are automatically skipped.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

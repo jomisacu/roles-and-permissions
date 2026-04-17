@@ -6,12 +6,21 @@ namespace Jomisacu\RolesAndPermissions;
 
 final class PermissionChecker implements PermissionCheckerInterface
 {
+    private ActorRoleRelationRepositoryInterface $actorRoleRelationRepository;
+    private ResourceMatcherInterface $resourceMatcher;
+    private ActorPermissionRelationRepositoryInterface $actorPermissionRelationRepository;
+    private RolePermissionRelationRepositoryInterface $rolePermissionRelationRepository;
+
     public function __construct(
-        private readonly ActorRoleRelationRepositoryInterface $actorRoleRelationRepository,
-        private readonly ResourceMatcherInterface $resourceMatcher,
-        private readonly ActorPermissionRelationRepositoryInterface $actorPermissionRelationRepository,
-        private readonly RolePermissionRelationRepositoryInterface $rolePermissionRelationRepository,
+        ActorRoleRelationRepositoryInterface $actorRoleRelationRepository,
+        ResourceMatcherInterface $resourceMatcher,
+        ActorPermissionRelationRepositoryInterface $actorPermissionRelationRepository,
+        RolePermissionRelationRepositoryInterface $rolePermissionRelationRepository
     ) {
+        $this->actorRoleRelationRepository = $actorRoleRelationRepository;
+        $this->resourceMatcher = $resourceMatcher;
+        $this->actorPermissionRelationRepository = $actorPermissionRelationRepository;
+        $this->rolePermissionRelationRepository = $rolePermissionRelationRepository;
     }
 
     public function isAny(string $contextId, string $actorId, array $roleIds): bool

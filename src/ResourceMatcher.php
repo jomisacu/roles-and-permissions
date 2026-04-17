@@ -50,7 +50,7 @@ final class ResourceMatcher implements ResourceMatcherInterface
         $segments = explode('::', $expression);
 
         return array_map(function ($segment) {
-            if (str_starts_with($segment, '{') && str_ends_with($segment, '}')) {
+            if (substr($segment, 0, 1) === '{' && substr($segment, -1) === '}') {
                 return array_map('trim', explode(',', trim($segment, '{}')));
             }
 

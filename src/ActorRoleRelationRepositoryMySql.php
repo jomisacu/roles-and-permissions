@@ -10,12 +10,14 @@ final class ActorRoleRelationRepositoryMySql implements ActorRoleRelationReposit
 {
     use HandlesMySqlRepositoryExceptions;
 
-    private readonly MySqlTableNames $tableNames;
+    private \PDO $pdo;
+    private MySqlTableNames $tableNames;
 
     public function __construct(
-        private readonly \PDO $pdo,
-        ?MySqlTableNames $tableNames = null,
+        \PDO $pdo,
+        ?MySqlTableNames $tableNames = null
     ) {
+        $this->pdo = $pdo;
         $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
 
@@ -39,13 +41,13 @@ final class ActorRoleRelationRepositoryMySql implements ActorRoleRelationReposit
 
             return array_map(
                 static fn(array $row) => new ActorRoleRelation(
-                    contextId: $row['context_id'],
-                    actorId: $row['actor_id'],
-                    roleId: $row['role_id'],
-                    createdByUserId: $row['created_by_user_id'],
-                    createdAt: new \DateTimeImmutable($row['created_at']),
-                    updatedByUserId: $row['updated_by_user_id'],
-                    updatedAt: isset($row['updated_at']) ? new \DateTimeImmutable($row['updated_at']) : null,
+                    $row['context_id'],
+                    $row['actor_id'],
+                    $row['role_id'],
+                    $row['created_by_user_id'],
+                    new \DateTimeImmutable($row['created_at']),
+                    $row['updated_by_user_id'],
+                    isset($row['updated_at']) ? new \DateTimeImmutable($row['updated_at']) : null
                 ),
                 $stmt->fetchAll(\PDO::FETCH_ASSOC),
             );

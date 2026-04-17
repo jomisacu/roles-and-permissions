@@ -10,10 +10,12 @@ final class ActorPermissionRelationRepositoryPostgres implements ActorPermission
 {
     use HandlesPostgresRepositoryExceptions;
 
-    private readonly PostgresTableNames $tableNames;
+    private PDO $pdo;
+    private PostgresTableNames $tableNames;
 
-    public function __construct(private readonly PDO $pdo, ?PostgresTableNames $tableNames = null)
+    public function __construct(PDO $pdo, ?PostgresTableNames $tableNames = null)
     {
+        $this->pdo = $pdo;
         $this->tableNames = $tableNames ?? PostgresTableNames::default();
     }
 
@@ -30,15 +32,15 @@ final class ActorPermissionRelationRepositoryPostgres implements ActorPermission
 
             return array_map(
                 static fn (array $row): ActorPermissionRelation => new ActorPermissionRelation(
-                    contextId: $row['context_id'],
-                    actorId: $row['actor_id'],
-                    permissionId: $row['permission_id'],
-                    resource: $row['resource'],
-                    negated: PostgresValueCaster::toBool($row['negated']),
-                    createdByUserId: $row['created_by_user_id'],
-                    createdAt: new \DateTimeImmutable($row['created_at']),
-                    updatedByUserId: $row['updated_by_user_id'],
-                    updatedAt: isset($row['updated_at']) ? new \DateTimeImmutable($row['updated_at']) : null,
+                    $row['context_id'],
+                    $row['actor_id'],
+                    $row['permission_id'],
+                    $row['resource'],
+                    PostgresValueCaster::toBool($row['negated']),
+                    $row['created_by_user_id'],
+                    new \DateTimeImmutable($row['created_at']),
+                    $row['updated_by_user_id'],
+                    isset($row['updated_at']) ? new \DateTimeImmutable($row['updated_at']) : null
                 ),
                 $statement->fetchAll(PDO::FETCH_ASSOC),
             );

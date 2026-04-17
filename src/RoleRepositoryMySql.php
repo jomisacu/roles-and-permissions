@@ -11,10 +11,12 @@ final class RoleRepositoryMySql implements RoleRepositoryInterface
 {
     use HandlesMySqlRepositoryExceptions;
 
-    private readonly MySqlTableNames $tableNames;
+    private PDO $pdo;
+    private MySqlTableNames $tableNames;
 
-    public function __construct(private readonly PDO $pdo, ?MySqlTableNames $tableNames = null)
+    public function __construct(PDO $pdo, ?MySqlTableNames $tableNames = null)
     {
+        $this->pdo = $pdo;
         $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
 

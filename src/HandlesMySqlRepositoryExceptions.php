@@ -11,7 +11,7 @@ trait HandlesMySqlRepositoryExceptions
      * @param callable(): T $operation
      * @return T
      */
-    private function runRepositoryOperation(string $action, string $table, callable $operation): mixed
+    private function runRepositoryOperation(string $action, string $table, callable $operation)
     {
         try {
             return $operation();

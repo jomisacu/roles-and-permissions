@@ -6,13 +6,25 @@ namespace Jomisacu\RolesAndPermissions;
 
 final class PostgresTableNames
 {
+    private string $permissions;
+    private string $roles;
+    private string $actorRoleRelations;
+    private string $actorPermissionRelations;
+    private string $rolePermissionRelations;
+
     public function __construct(
-        private readonly string $permissions,
-        private readonly string $roles,
-        private readonly string $actorRoleRelations,
-        private readonly string $actorPermissionRelations,
-        private readonly string $rolePermissionRelations,
+        string $permissions,
+        string $roles,
+        string $actorRoleRelations,
+        string $actorPermissionRelations,
+        string $rolePermissionRelations
     ) {
+        $this->permissions = $permissions;
+        $this->roles = $roles;
+        $this->actorRoleRelations = $actorRoleRelations;
+        $this->actorPermissionRelations = $actorPermissionRelations;
+        $this->rolePermissionRelations = $rolePermissionRelations;
+
         self::validateIdentifier($this->permissions, 'permissions');
         self::validateIdentifier($this->roles, 'roles');
         self::validateIdentifier($this->actorRoleRelations, 'actorRoleRelations');

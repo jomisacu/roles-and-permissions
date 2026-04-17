@@ -11,10 +11,14 @@ final class PostgresRepositoryExceptionMapper
         $sqlState = (string) ($exception->errorInfo[0] ?? '');
         $message = sprintf('Failed to %s in `%s`.', $operation, $table);
 
-        return match ($sqlState) {
-            '23505' => new UniqueConstraintViolationException($message, 0, $exception),
-            '23503' => new ForeignKeyConstraintViolationException($message, 0, $exception),
-            default => new RepositoryException($message, 0, $exception),
-        };
+        switch ($sqlState) {
+            case '23505':
+                return new UniqueConstraintViolationException($message, 0, $exception);
+
+            case '23503':
+                return new ForeignKeyConstraintViolationException($message, 0, $exception);
+        }
+
+        return new RepositoryException($message, 0, $exception);
     }
 }

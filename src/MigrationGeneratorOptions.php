@@ -4,14 +4,31 @@ declare(strict_types=1);
 
 namespace Jomisacu\RolesAndPermissions;
 
+/**
+ * @property-read string $tablePrefix
+ * @property-read string $targetFramework
+ * @property-read string $targetPlatform
+ * @property-read string $migrationsPath
+ */
 final class MigrationGeneratorOptions
 {
+    use ReadsPrivateProperties;
+
+    private string $tablePrefix;
+    private string $targetFramework;
+    private string $targetPlatform;
+    private string $migrationsPath;
+
     public function __construct(
-        public readonly string $tablePrefix,
-        public readonly string $targetFramework,
-        public readonly string $targetPlatform,
-        public readonly string $migrationsPath,
+        string $tablePrefix,
+        string $targetFramework,
+        string $targetPlatform,
+        string $migrationsPath
     ) {
+        $this->tablePrefix = $tablePrefix;
+        $this->targetFramework = $targetFramework;
+        $this->targetPlatform = $targetPlatform;
+        $this->migrationsPath = $migrationsPath;
     }
 
     /**
@@ -22,9 +39,9 @@ final class MigrationGeneratorOptions
         $options = [];
 
         foreach ($arguments as $argument) {
-            $normalizedArgument = str_starts_with($argument, '--') ? substr($argument, 2) : $argument;
+            $normalizedArgument = substr($argument, 0, 2) === '--' ? substr($argument, 2) : $argument;
 
-            if (!str_contains($normalizedArgument, '=')) {
+            if (strpos($normalizedArgument, '=') === false) {
                 throw new \InvalidArgumentException(
                     sprintf('Invalid argument "%s". Use key=value or --key=value.', $argument),
                 );
@@ -89,15 +106,15 @@ final class MigrationGeneratorOptions
             return $trimmedPath;
         }
 
-        $relativePath = str_starts_with($trimmedPath, './') ? substr($trimmedPath, 2) : $trimmedPath;
-        $relativePath = str_starts_with($relativePath, '.\\') ? substr($relativePath, 2) : $relativePath;
+        $relativePath = substr($trimmedPath, 0, 2) === './' ? substr($trimmedPath, 2) : $trimmedPath;
+        $relativePath = substr($relativePath, 0, 2) === '.\\' ? substr($relativePath, 2) : $relativePath;
 
         return rtrim($currentWorkingDirectory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
     }
 
     private static function isAbsolutePath(string $path): bool
     {
-        return str_starts_with($path, DIRECTORY_SEPARATOR)
+        return strpos($path, DIRECTORY_SEPARATOR) === 0
             || preg_match('/^[A-Za-z]:\\\\/', $path) === 1
             || preg_match('/^[A-Za-z]:\//', $path) === 1;
     }

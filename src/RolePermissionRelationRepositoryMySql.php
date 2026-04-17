@@ -11,12 +11,14 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
 {
     use HandlesMySqlRepositoryExceptions;
 
-    private readonly MySqlTableNames $tableNames;
+    private PDO $pdo;
+    private MySqlTableNames $tableNames;
 
     public function __construct(
-        private readonly PDO $pdo,
-        ?MySqlTableNames $tableNames = null,
+        PDO $pdo,
+        ?MySqlTableNames $tableNames = null
     ) {
+        $this->pdo = $pdo;
         $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
 
@@ -47,15 +49,15 @@ final class RolePermissionRelationRepositoryMySql implements RolePermissionRelat
     {
         return array_map(static function (array $row): RolePermissionRelation {
             return new RolePermissionRelation(
-                contextId:       (string) $row['context_id'],
-                roleId:          (string) $row['role_id'],
-                permissionId:    (string) $row['permission_id'],
-                resource:        (string) $row['resource'],
-                negated:         (bool) $row['negated'],
-                createdByUserId: isset($row['created_by_user_id']) ? (string) $row['created_by_user_id'] : null,
-                createdAt:       new DateTimeImmutable((string) $row['created_at']),
-                updatedByUserId: isset($row['updated_by_user_id']) ? (string) $row['updated_by_user_id'] : null,
-                updatedAt:       isset($row['updated_at']) ? new DateTimeImmutable((string) $row['updated_at']) : null,
+                (string) $row['context_id'],
+                (string) $row['role_id'],
+                (string) $row['permission_id'],
+                (string) $row['resource'],
+                (bool) $row['negated'],
+                isset($row['created_by_user_id']) ? (string) $row['created_by_user_id'] : null,
+                new DateTimeImmutable((string) $row['created_at']),
+                isset($row['updated_by_user_id']) ? (string) $row['updated_by_user_id'] : null,
+                isset($row['updated_at']) ? new DateTimeImmutable((string) $row['updated_at']) : null
             );
         }, $rows);
     }

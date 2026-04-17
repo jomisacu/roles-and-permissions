@@ -11,10 +11,15 @@ final class GenerateMigrationsCommand
         'jomisacu:roles-and-permissions:generate-migrations',
     ];
 
+    private MigrationGenerator $migrationGenerator;
+    private MigrationWriter $migrationWriter;
+
     public function __construct(
-        private readonly MigrationGenerator $migrationGenerator = new MigrationGenerator(),
-        private readonly MigrationWriter $migrationWriter = new MigrationWriter(),
+        ?MigrationGenerator $migrationGenerator = null,
+        ?MigrationWriter $migrationWriter = null
     ) {
+        $this->migrationGenerator = $migrationGenerator ?? new MigrationGenerator();
+        $this->migrationWriter = $migrationWriter ?? new MigrationWriter();
     }
 
     /**

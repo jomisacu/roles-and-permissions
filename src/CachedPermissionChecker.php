@@ -16,9 +16,12 @@ final class CachedPermissionChecker implements PermissionCheckerInterface
     /** @var array<string, bool> */
     private array $cache = [];
 
+    private PermissionCheckerInterface $inner;
+
     public function __construct(
-        private readonly PermissionCheckerInterface $inner,
+        PermissionCheckerInterface $inner
     ) {
+        $this->inner = $inner;
     }
 
     public function is(string $contextId, string $actorId, string $roleId): bool
@@ -71,4 +74,3 @@ final class CachedPermissionChecker implements PermissionCheckerInterface
         $this->cache = [];
     }
 }
-

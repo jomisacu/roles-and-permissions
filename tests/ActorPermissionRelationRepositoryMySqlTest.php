@@ -9,7 +9,6 @@ use Jomisacu\RolesAndPermissions\ActorPermissionRelationRepositoryMySql;
 use Jomisacu\RolesAndPermissions\Permission;
 use Jomisacu\RolesAndPermissions\PermissionRepositoryMySql;
 use PDO;
-use PHPUnit\Framework\Attributes\Depends;
 
 class ActorPermissionRelationRepositoryMySqlTest extends MySqlIntegrationTestCase
 {
@@ -67,7 +66,9 @@ class ActorPermissionRelationRepositoryMySqlTest extends MySqlIntegrationTestCas
         $this->assertNotFalse($result);
     }
 
-    #[Depends('testCreate')]
+    /**
+     * @depends testCreate
+     */
     public function testDelete(): void
     {
         $actorPermissionRelation = new ActorPermissionRelation(

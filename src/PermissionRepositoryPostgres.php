@@ -10,10 +10,12 @@ final class PermissionRepositoryPostgres implements PermissionRepositoryInterfac
 {
     use HandlesPostgresRepositoryExceptions;
 
-    private readonly PostgresTableNames $tableNames;
+    private PDO $pdo;
+    private PostgresTableNames $tableNames;
 
-    public function __construct(private readonly PDO $pdo, ?PostgresTableNames $tableNames = null)
+    public function __construct(PDO $pdo, ?PostgresTableNames $tableNames = null)
     {
+        $this->pdo = $pdo;
         $this->tableNames = $tableNames ?? PostgresTableNames::default();
     }
 

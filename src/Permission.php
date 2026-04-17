@@ -4,13 +4,30 @@ declare(strict_types=1);
 
 namespace Jomisacu\RolesAndPermissions;
 
+/**
+ * @property-read string $id
+ * @property-read string $contextId
+ * @property-read string $name
+ * @property-read string|null $description
+ */
 final class Permission
 {
+    use ReadsPrivateProperties;
+
+    private string $id;
+    private string $contextId;
+    private string $name;
+    private ?string $description;
+
     public function __construct(
-        public readonly string $id,
-        public readonly string $contextId,
-        public readonly string $name,
-        public readonly ?string $description
+        string $id,
+        string $contextId,
+        string $name,
+        ?string $description
     ) {
+        $this->id = $id;
+        $this->contextId = $contextId;
+        $this->name = $name;
+        $this->description = $description;
     }
 }

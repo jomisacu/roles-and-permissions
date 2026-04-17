@@ -11,10 +11,15 @@ final class MySqlRepositoryExceptionMapper
         $driverCode = isset($exception->errorInfo[1]) ? (int) $exception->errorInfo[1] : 0;
         $message = sprintf('Failed to %s in `%s`.', $operation, $table);
 
-        return match ($driverCode) {
-            1062 => new UniqueConstraintViolationException($message, $driverCode, $exception),
-            1451, 1452 => new ForeignKeyConstraintViolationException($message, $driverCode, $exception),
-            default => new RepositoryException($message, $driverCode, $exception),
-        };
+        switch ($driverCode) {
+            case 1062:
+                return new UniqueConstraintViolationException($message, $driverCode, $exception);
+
+            case 1451:
+            case 1452:
+                return new ForeignKeyConstraintViolationException($message, $driverCode, $exception);
+        }
+
+        return new RepositoryException($message, $driverCode, $exception);
     }
 }

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/jomisacu/roles-and-permissions/actions/workflows/ci.yml/badge.svg)](https://github.com/jomisacu/roles-and-permissions/actions)
 
-A framework-agnostic PHP library for managing roles and permissions with multi-tenant support. Zero runtime dependencies — just PHP 8.1+ and PDO.
+A framework-agnostic PHP library for managing roles and permissions with multi-tenant support. Zero runtime dependencies - just PHP 7.4+ and PDO.
 
 ## Features
 
@@ -15,7 +15,7 @@ A framework-agnostic PHP library for managing roles and permissions with multi-t
 
 ## Requirements
 
-- PHP 8.1+
+- PHP 7.4+
 - `ext-pdo`
 - `ext-pdo_mysql` (for MySQL) or `ext-pdo_pgsql` (for PostgreSQL)
 

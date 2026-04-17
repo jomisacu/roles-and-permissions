@@ -10,12 +10,14 @@ final class PermissionRepositoryMySql implements PermissionRepositoryInterface
 {
     use HandlesMySqlRepositoryExceptions;
 
-    private readonly MySqlTableNames $tableNames;
+    private \PDO $pdo;
+    private MySqlTableNames $tableNames;
 
     public function __construct(
-        private readonly \PDO $pdo,
-        ?MySqlTableNames $tableNames = null,
+        \PDO $pdo,
+        ?MySqlTableNames $tableNames = null
     ) {
+        $this->pdo = $pdo;
         $this->tableNames = $tableNames ?? MySqlTableNames::default();
     }
     public function findById(string $id): ?Permission

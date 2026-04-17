@@ -6,9 +6,12 @@ namespace Jomisacu\RolesAndPermissions;
 
 final class MigrationGenerator
 {
+    private MigrationTemplateFactory $migrationTemplateFactory;
+
     public function __construct(
-        private readonly MigrationTemplateFactory $migrationTemplateFactory = new MigrationTemplateFactory(),
+        ?MigrationTemplateFactory $migrationTemplateFactory = null
     ) {
+        $this->migrationTemplateFactory = $migrationTemplateFactory ?? new MigrationTemplateFactory();
     }
 
     /**
@@ -18,12 +21,18 @@ final class MigrationGenerator
     {
         $definitions = $this->migrationTemplateFactory->build($options->targetPlatform, $options->tablePrefix);
 
-        return match ($options->targetFramework) {
-            'php' => $this->generateSqlFiles($options->migrationsPath, $definitions),
-            'laravel' => $this->generateLaravelFiles($options->migrationsPath, $definitions),
-            'symfony' => $this->generateSymfonyFiles($options->migrationsPath, $definitions, $options->targetPlatform),
-            default => throw new \InvalidArgumentException(sprintf('Unsupported framework "%s".', $options->targetFramework)),
-        };
+        switch ($options->targetFramework) {
+            case 'php':
+                return $this->generateSqlFiles($options->migrationsPath, $definitions);
+
+            case 'laravel':
+                return $this->generateLaravelFiles($options->migrationsPath, $definitions);
+
+            case 'symfony':
+                return $this->generateSymfonyFiles($options->migrationsPath, $definitions, $options->targetPlatform);
+        }
+
+        throw new \InvalidArgumentException(sprintf('Unsupported framework "%s".', $options->targetFramework));
     }
 
     /**

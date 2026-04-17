@@ -6,13 +6,23 @@ namespace Jomisacu\RolesAndPermissions;
 
 final class PostgresValueCaster
 {
-    public static function toBool(mixed $value): bool
+    /**
+     * @param mixed $value
+     */
+    public static function toBool($value): bool
     {
-        return match (true) {
-            is_bool($value) => $value,
-            is_int($value) => $value === 1,
-            is_string($value) => in_array(strtolower($value), ['1', 'true', 't', 'yes', 'y', 'on'], true),
-            default => (bool) $value,
-        };
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value === 1;
+        }
+
+        if (is_string($value)) {
+            return in_array(strtolower($value), ['1', 'true', 't', 'yes', 'y', 'on'], true);
+        }
+
+        return (bool) $value;
     }
 }

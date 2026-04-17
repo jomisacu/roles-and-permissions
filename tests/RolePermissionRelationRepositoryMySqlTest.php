@@ -11,7 +11,6 @@ use Jomisacu\RolesAndPermissions\RolePermissionRelation;
 use Jomisacu\RolesAndPermissions\RolePermissionRelationRepositoryMySql;
 use Jomisacu\RolesAndPermissions\RoleRepositoryMySql;
 use PDO;
-use PHPUnit\Framework\Attributes\Depends;
 
 class RolePermissionRelationRepositoryMySqlTest extends MySqlIntegrationTestCase
 {
@@ -77,7 +76,9 @@ class RolePermissionRelationRepositoryMySqlTest extends MySqlIntegrationTestCase
         $this->rolePermissionRelationRepository->delete($rolePermissionRelation);
     }
 
-    #[Depends('testCreate')]
+    /**
+     * @depends testCreate
+     */
     public function testDelete(): void
     {
         $rolePermissionRelation = new RolePermissionRelation(

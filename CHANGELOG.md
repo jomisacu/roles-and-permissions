@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `resource_hash` column (SHA-256) on `actor_permission_relations` and `role_permission_relations` tables for full-length unique constraint on resources (migration 0003).
 - PHPStan static analysis at level 8 with zero errors.
 - GitHub Actions CI workflow with tests across PHP 7.4–8.4 and static analysis.
+- Angular frontend helpers with permission directives and a TypeScript permission service in `Angular/`.
 - This changelog.
 
 ### Changed

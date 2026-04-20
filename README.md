@@ -12,6 +12,7 @@ A framework-agnostic PHP library for managing roles and permissions with multi-t
 - **MySQL and PostgreSQL** support.
 - **Framework-agnostic** — works with Laravel, Symfony, or plain PHP. Migration generators included for all three.
 - **In-memory caching** — optional `CachedPermissionChecker` decorator to avoid repeated queries within a request.
+- **Angular frontend helpers** — an Angular service and structural directives are available in `Angular/`.
 
 ## Requirements
 
